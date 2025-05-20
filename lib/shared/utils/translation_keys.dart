@@ -1,0 +1,45 @@
+/// Utility class for translation keys
+class TranslationKeys {
+  // Catalog feature keys
+  static const String catalogGoldProducts = 'catalogFeature.goldProducts';
+  static const String catalogSearchProducts = 'catalogFeature.searchProducts';
+  static const String catalogFilterButton = 'catalogFeature.filterButton';
+  static const String catalogFiltersTitle = 'catalogFeature.filtersTitle';
+  static const String catalogSortButton = 'catalogFeature.sortButton';
+  static const String catalogSortByLabel = 'catalogFeature.sortByLabel';
+  static const String catalogSortNewest = 'catalogFeature.sortNewest';
+  static const String catalogSortPriceHighToLow = 'catalogFeature.sortPriceHighToLow';
+  static const String catalogSortPriceLowToHigh = 'catalogFeature.sortPriceLowToHigh';
+  static const String catalogSortPopularity = 'catalogFeature.sortPopularity';
+  static const String catalogSortDiscount = 'catalogFeature.sortDiscount';
+  static const String catalogGridView = 'catalogFeature.gridView';
+  static const String catalogListView = 'catalogFeature.listView';
+  static const String catalogProductDetails = 'catalogFeature.productDetails';
+  static const String catalogPurity = 'catalogFeature.purity';
+  static const String catalogMakingCharges = 'catalogFeature.makingCharges';
+  static const String catalogAddToCart = 'catalogFeature.addToCart';
+  static const String catalogBuyProduct = 'catalogFeature.buyProduct';
+  static const String catalogSimilarProducts = 'catalogFeature.similarProducts';
+  static const String catalogProductSpecifications = 'catalogFeature.productSpecifications';
+  static const String catalogShoppingCart = 'catalogFeature.shoppingCart';
+  static const String catalogCheckout = 'catalogFeature.checkout';
+  static const String catalogContinueShopping = 'catalogFeature.continueShopping';
+  static const String catalogCategories = 'catalogFeature.categories';
+  static const String catalogPriceRange = 'catalogFeature.priceRange';
+  static const String catalogApplyFilters = 'catalogFeature.applyFilters';
+  static const String catalogClearAllFilters = 'catalogFeature.clearAllFilters';
+  static const String catalogNoProductsFound = 'catalogFeature.noProductsFound';
+  static const String catalogNoProductsFoundForSearch = 'catalogFeature.noProductsFoundForSearch';
+  static const String catalogNoProductsFoundWithFilters = 'catalogFeature.noProductsFoundWithFilters';
+  static const String catalogResetFiltersButton = 'catalogFeature.resetFiltersButton';
+  static const String catalogDescription = 'catalogFeature.description';
+  static const String catalogAddedToCart = 'catalogFeature.addedToCart';
+  static const String catalogErrorLoadingProduct = 'catalogFeature.errorLoadingProduct';
+  static const String catalogTryAgainButton = 'catalogFeature.tryAgainButton';
+  static const String catalogProductNotFound = 'catalogFeature.productNotFound';
+  static const String catalogInStock = 'catalogFeature.inStock';
+  static const String catalogLowStock = 'catalogFeature.lowStock';
+  static const String catalogOutOfStock = 'catalogFeature.outOfStock';
+  static const String catalogPreOrder = 'catalogFeature.preOrder';
+  static const String catalogComingSoonStatus = 'catalogFeature.comingSoonStatus';
+}
