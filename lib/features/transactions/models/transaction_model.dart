@@ -124,13 +124,17 @@ class Transaction {
   final String currency;
   final double? goldWeight;
   final String? goldType;
+  final String? goldCategory;
   final double price;
-  final double fee;
-  final double total;
+  final double totalAmount;
   final DateTime date;
+  final DateTime? completedDate;
   final String? paymentMethod;
+  final String? paymentMethodId;
   final String? reference;
-  final String? notes;
+  final String? description;
+  final String? failureReason;
+  final String? cancellationReason;
 
   const Transaction({
     required this.id,
@@ -140,14 +144,83 @@ class Transaction {
     required this.currency,
     this.goldWeight,
     this.goldType,
+    this.goldCategory,
     required this.price,
-    required this.fee,
-    required this.total,
+    required this.totalAmount,
     required this.date,
+    this.completedDate,
     this.paymentMethod,
+    this.paymentMethodId,
     this.reference,
-    this.notes,
+    this.description,
+    this.failureReason,
+    this.cancellationReason,
   });
+
+  /// Create a Transaction from JSON
+  factory Transaction.fromJson(Map<String, dynamic> json) {
+    // Parse transaction type
+    TransactionType parseType(String typeStr) {
+      switch (typeStr.toLowerCase()) {
+        case 'buy':
+          return TransactionType.buy;
+        case 'sell':
+          return TransactionType.sell;
+        case 'deposit':
+          return TransactionType.deposit;
+        case 'withdraw':
+          return TransactionType.withdraw;
+        case 'transfer':
+          return TransactionType.transfer;
+        case 'investment':
+          return TransactionType.investment;
+        default:
+          return TransactionType.deposit;
+      }
+    }
+
+    // Parse transaction status
+    TransactionStatus parseStatus(String statusStr) {
+      switch (statusStr.toLowerCase()) {
+        case 'pending':
+          return TransactionStatus.pending;
+        case 'processing':
+          return TransactionStatus.pending; // Treat processing as pending
+        case 'completed':
+          return TransactionStatus.completed;
+        case 'failed':
+          return TransactionStatus.failed;
+        case 'cancelled':
+          return TransactionStatus.cancelled;
+        default:
+          return TransactionStatus.pending;
+      }
+    }
+
+    return Transaction(
+      id: json['id'],
+      type: parseType(json['type']),
+      status: parseStatus(json['status']),
+      amount: json['amount']?.toDouble() ?? 0.0,
+      currency: json['currency'] ?? 'AED',
+      goldWeight: json['goldWeight']?.toDouble(),
+      goldType: json['goldType'],
+      goldCategory: json['goldCategory'],
+      price: json['price']?.toDouble() ?? 0.0,
+      totalAmount:
+          json['totalAmount']?.toDouble() ?? json['amount']?.toDouble() ?? 0.0,
+      date: DateTime.parse(json['date']),
+      completedDate: json['completedDate'] != null
+          ? DateTime.parse(json['completedDate'])
+          : null,
+      paymentMethod: json['paymentMethod'],
+      paymentMethodId: json['paymentMethodId'],
+      reference: json['reference'],
+      description: json['description'],
+      failureReason: json['failureReason'],
+      cancellationReason: json['cancellationReason'],
+    );
+  }
 
   /// Create a copy of this transaction with the given fields replaced with the new values
   Transaction copyWith({
@@ -158,13 +231,17 @@ class Transaction {
     String? currency,
     double? goldWeight,
     String? goldType,
+    String? goldCategory,
     double? price,
-    double? fee,
-    double? total,
+    double? totalAmount,
     DateTime? date,
+    DateTime? completedDate,
     String? paymentMethod,
+    String? paymentMethodId,
     String? reference,
-    String? notes,
+    String? description,
+    String? failureReason,
+    String? cancellationReason,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -174,13 +251,17 @@ class Transaction {
       currency: currency ?? this.currency,
       goldWeight: goldWeight ?? this.goldWeight,
       goldType: goldType ?? this.goldType,
+      goldCategory: goldCategory ?? this.goldCategory,
       price: price ?? this.price,
-      fee: fee ?? this.fee,
-      total: total ?? this.total,
+      totalAmount: totalAmount ?? this.totalAmount,
       date: date ?? this.date,
+      completedDate: completedDate ?? this.completedDate,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
       reference: reference ?? this.reference,
-      notes: notes ?? this.notes,
+      description: description ?? this.description,
+      failureReason: failureReason ?? this.failureReason,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
     );
   }
 }

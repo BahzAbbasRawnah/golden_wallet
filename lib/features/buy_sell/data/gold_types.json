@@ -1,0 +1,202 @@
+{
+  "goldTypes": [
+    {
+      "id": "24k",
+      "name": "ذهب عيار 24",
+      "purity": 0.999,
+      "description": "أنقى أنواع الذهب، يحتوي على 99.9% من الذهب النقي",
+      "color": "أصفر ذهبي",
+      "buyPrice": 245.50,
+      "sellPrice": 240.75,
+      "unit": "جرام",
+      "currency": "ريال يمني",
+      "minPurchaseWeight": 1.0,
+      "maxPurchaseWeight": 1000.0,
+      "minSellWeight": 1.0,
+      "isAvailable": true,
+      "categories": [
+        {
+          "id": "bars",
+          "name": "سبائك",
+          "description": "سبائك ذهبية عالية النقاء",
+          "weights": [1, 2.5, 5, 10, 20, 50, 100, 250, 500, 1000],
+          "images": ["assets/images/gold/24k_bar.png"]
+        },
+        {
+          "id": "coins",
+          "name": "عملات",
+          "description": "عملات ذهبية للاستثمار",
+          "weights": [1, 2, 5, 10, 20, 50],
+          "images": ["assets/images/gold/24k_coin.png"]
+        }
+      ],
+      "priceHistory": [
+        {
+          "date": "2025-05-01",
+          "buyPrice": 242.30,
+          "sellPrice": 237.50
+        },
+        {
+          "date": "2025-05-05",
+          "buyPrice": 243.75,
+          "sellPrice": 238.90
+        },
+        {
+          "date": "2025-05-10",
+          "buyPrice": 244.20,
+          "sellPrice": 239.40
+        },
+        {
+          "date": "2025-05-15",
+          "buyPrice": 245.50,
+          "sellPrice": 240.75
+        }
+      ]
+    },
+    {
+      "id": "22k",
+      "name": "ذهب عيار 22",
+      "purity": 0.916,
+      "description": "ذهب عالي النقاء يستخدم في المجوهرات الفاخرة، يحتوي على 91.6% من الذهب النقي",
+      "color": "أصفر ذهبي",
+      "buyPrice": 225.80,
+      "sellPrice": 220.50,
+      "unit": "جرام",
+      "currency": "ريال يمني",
+      "minPurchaseWeight": 1.0,
+      "maxPurchaseWeight": 500.0,
+      "minSellWeight": 1.0,
+      "isAvailable": true,
+      "categories": [
+        {
+          "id": "jewelry",
+          "name": "مجوهرات",
+          "description": "مجوهرات ذهبية فاخرة",
+          "weights": [2, 5, 10, 20, 50],
+          "images": ["assets/images/gold/22k_jewelry.png"]
+        },
+        {
+          "id": "coins",
+          "name": "عملات",
+          "description": "عملات ذهبية تقليدية",
+          "weights": [1, 2, 5, 10],
+          "images": ["assets/images/gold/22k_coin.png"]
+        }
+      ],
+      "priceHistory": [
+        {
+          "date": "2025-05-01",
+          "buyPrice": 222.90,
+          "sellPrice": 217.60
+        },
+        {
+          "date": "2025-05-05",
+          "buyPrice": 224.10,
+          "sellPrice": 218.80
+        },
+        {
+          "date": "2025-05-10",
+          "buyPrice": 224.95,
+          "sellPrice": 219.65
+        },
+        {
+          "date": "2025-05-15",
+          "buyPrice": 225.80,
+          "sellPrice": 220.50
+        }
+      ]
+    },
+    {
+      "id": "21k",
+      "name": "ذهب عيار 21",
+      "purity": 0.875,
+      "description": "ذهب شائع في الشرق الأوسط، يحتوي على 87.5% من الذهب النقي",
+      "color": "أصفر ذهبي",
+      "buyPrice": 215.25,
+      "sellPrice": 210.10,
+      "unit": "جرام",
+      "currency": "ريال يمني",
+      "minPurchaseWeight": 1.0,
+      "maxPurchaseWeight": 500.0,
+      "minSellWeight": 1.0,
+      "isAvailable": true,
+      "categories": [
+        {
+          "id": "jewelry",
+          "name": "مجوهرات",
+          "description": "مجوهرات ذهبية تقليدية",
+          "weights": [2, 5, 10, 20, 50],
+          "images": ["assets/images/gold/21k_jewelry.png"]
+        }
+      ],
+      "priceHistory": [
+        {
+          "date": "2025-05-01",
+          "buyPrice": 212.50,
+          "sellPrice": 207.30
+        },
+        {
+          "date": "2025-05-05",
+          "buyPrice": 213.60,
+          "sellPrice": 208.45
+        },
+        {
+          "date": "2025-05-10",
+          "buyPrice": 214.40,
+          "sellPrice": 209.25
+        },
+        {
+          "date": "2025-05-15",
+          "buyPrice": 215.25,
+          "sellPrice": 210.10
+        }
+      ]
+    },
+    {
+      "id": "18k",
+      "name": "ذهب عيار 18",
+      "purity": 0.75,
+      "description": "ذهب شائع في المجوهرات، يحتوي على 75% من الذهب النقي",
+      "color": "أصفر ذهبي إلى برتقالي",
+      "buyPrice": 185.40,
+      "sellPrice": 180.25,
+      "unit": "جرام",
+      "currency": "ريال يمني",
+      "minPurchaseWeight": 1.0,
+      "maxPurchaseWeight": 300.0,
+      "minSellWeight": 1.0,
+      "isAvailable": true,
+      "categories": [
+        {
+          "id": "jewelry",
+          "name": "مجوهرات",
+          "description": "مجوهرات ذهبية عصرية",
+          "weights": [2, 5, 10, 20],
+          "images": ["assets/images/gold/18k_jewelry.png"]
+        }
+      ],
+      "priceHistory": [
+        {
+          "date": "2025-05-01",
+          "buyPrice": 182.90,
+          "sellPrice": 177.75
+        },
+        {
+          "date": "2025-05-05",
+          "buyPrice": 183.80,
+          "sellPrice": 178.65
+        },
+        {
+          "date": "2025-05-10",
+          "buyPrice": 184.60,
+          "sellPrice": 179.45
+        },
+        {
+          "date": "2025-05-15",
+          "buyPrice": 185.40,
+          "sellPrice": 180.25
+        }
+      ]
+    }
+  ]
+}

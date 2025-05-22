@@ -1,0 +1,135 @@
+{
+  "investmentPlans": [
+    {
+      "id": "gold-savings",
+      "name": "خطة توفير الذهب",
+      "description": "خطة استثمارية آمنة لتوفير الذهب على المدى الطويل",
+      "minInvestment": 1000.0,
+      "currency": "ريال يمني",
+      "duration": {
+        "min": 12,
+        "max": 60,
+        "unit": "month"
+      },
+      "expectedReturns": {
+        "min": 3.5,
+        "max": 5.0,
+        "unit": "percent"
+      },
+      "riskLevel": "low",
+      "features": [
+        "استثمار آمن في الذهب",
+        "عوائد ثابتة",
+        "سحب مبكر متاح مع رسوم",
+        "تحويل إلى ذهب فعلي"
+      ],
+      "goldAllocation": {
+        "24K": 70,
+        "22K": 20,
+        "18K": 10
+      },
+      "paymentFrequency": "monthly",
+      "isActive": true,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "tags": ["savings", "low-risk", "beginner-friendly"]
+    },
+    {
+      "id": "gold-growth",
+      "name": "خطة نمو الذهب",
+      "description": "خطة استثمارية متوازنة للنمو المتوسط مع مخاطر معتدلة",
+      "minInvestment": 5000.0,
+      "currency": "ريال يمني",
+      "duration": {
+        "min": 24,
+        "max": 48,
+        "unit": "month"
+      },
+      "expectedReturns": {
+        "min": 5.0,
+        "max": 8.0,
+        "unit": "percent"
+      },
+      "riskLevel": "medium",
+      "features": [
+        "توزيع متوازن بين الذهب والفضة",
+        "عوائد متوسطة",
+        "سحب مبكر متاح مع رسوم",
+        "خيارات إعادة الاستثمار"
+      ],
+      "goldAllocation": {
+        "24K": 50,
+        "22K": 30,
+        "18K": 20
+      },
+      "paymentFrequency": "quarterly",
+      "isActive": true,
+      "createdAt": "2025-01-15T00:00:00Z",
+      "tags": ["growth", "medium-risk", "balanced"]
+    },
+    {
+      "id": "gold-premium",
+      "name": "خطة الذهب المميزة",
+      "description": "خطة استثمارية متقدمة للمستثمرين ذوي الخبرة مع عوائد محتملة أعلى",
+      "minInvestment": 10000.0,
+      "currency": "ريال يمني",
+      "duration": {
+        "min": 36,
+        "max": 60,
+        "unit": "month"
+      },
+      "expectedReturns": {
+        "min": 7.0,
+        "max": 12.0,
+        "unit": "percent"
+      },
+      "riskLevel": "high",
+      "features": [
+        "استثمار في الذهب والمعادن النفيسة الأخرى",
+        "عوائد محتملة عالية",
+        "خيارات تخصيص متقدمة",
+        "خدمات استشارية مخصصة"
+      ],
+      "goldAllocation": {
+        "24K": 60,
+        "22K": 25,
+        "18K": 15
+      },
+      "paymentFrequency": "annually",
+      "isActive": true,
+      "createdAt": "2025-02-01T00:00:00Z",
+      "tags": ["premium", "high-returns", "diversified"]
+    },
+    {
+      "id": "gold-fixed",
+      "name": "خطة الذهب الثابتة",
+      "description": "خطة استثمارية بعائد ثابت مضمون للمستثمرين المحافظين",
+      "minInvestment": 2000.0,
+      "currency": "ريال يمني",
+      "duration": {
+        "min": 12,
+        "max": 36,
+        "unit": "month"
+      },
+      "expectedReturns": {
+        "min": 3.0,
+        "max": 4.0,
+        "unit": "percent"
+      },
+      "riskLevel": "very_low",
+      "features": [
+        "عائد ثابت مضمون",
+        "استثمار آمن في الذهب",
+        "حماية من التضخم",
+        "خيار التجديد التلقائي"
+      ],
+      "goldAllocation": {
+        "24K": 80,
+        "22K": 20
+      },
+      "paymentFrequency": "one_time",
+      "isActive": true,
+      "createdAt": "2025-03-01T00:00:00Z",
+      "tags": ["fixed-returns", "guaranteed", "safe"]
+    }
+  ]
+}

@@ -200,7 +200,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildWalletBalanceCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: AppTheme.goldGradient,
+        gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFFFFD700), // Gold
+          Color(0xFFDAA520), // Golden rod
+        ],
+      ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -222,8 +229,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   'walletBalance'.tr(),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        fontWeight: FontWeight.w500,
                       ),
                 ),
                 Container(
@@ -238,7 +245,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const Icon(
                         Icons.trending_up,
                         color: Colors.white,
-                        size: 16,
+                        size: 20,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -246,7 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -486,8 +493,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
             border: Border.all(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? AppTheme.goldColor.withAlpha(50)
-                  : AppTheme.goldDark.withAlpha(50),
+                  ? AppTheme.secondaryGrey
+                  : AppTheme.secondaryLightGrey,
               width: 1,
             ),
           ),
@@ -554,11 +561,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             height: 60,
             decoration: BoxDecoration(
               color: color.withAlpha(25), // 0.1 opacity (25/255)
-              shape: BoxShape.circle,
+              shape: BoxShape.rectangle,
               border: Border.all(
                 color: color.withAlpha(50),
                 width: 1,
               ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Icon(
@@ -599,28 +607,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       fontWeight: FontWeight.w600,
                     ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.successColor.withAlpha(25), // 0.1 opacity
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.arrow_upward,
-                      color: AppTheme.successColor,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '2.3%',
-                      style: TextStyle(
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.goldPriceHistory);
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.successColor.withAlpha(25), // 0.1 opacity
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.arrow_upward,
                         color: AppTheme.successColor,
-                        fontWeight: FontWeight.w600,
+                        size: 16,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        '2.3%',
+                        style: TextStyle(
+                          color: AppTheme.successColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -720,8 +734,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Check if this is the first time navigating to the investment tab (index 2)
           if (index == 2 && _firstTimeInvestmentTab) {
             _firstTimeInvestmentTab = false;
-
-            // Set a flag in shared preferences to indicate this is the first visit
             _setFirstTimeInvestmentVisit();
           }
 
@@ -729,7 +741,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       },
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: AppTheme.goldDark,
+      selectedItemColor: AppTheme.primaryColor,
       unselectedItemColor: Theme.of(context).brightness == Brightness.dark
           ? Colors.grey[400]
           : Colors.grey[600],

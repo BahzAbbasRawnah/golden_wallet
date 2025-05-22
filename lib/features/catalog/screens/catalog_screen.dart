@@ -32,8 +32,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeData();
     _setupScrollListener();
+
+    // Initialize data after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
   }
 
   @override
@@ -93,6 +97,24 @@ class _CatalogScreenState extends State<CatalogScreen> {
       appBar: CustomAppBar(
         title: 'catalog'.tr(),
         showBackButton: false,
+        actions: [
+          IconButton(
+              icon: const Icon(
+                Icons.shopping_cart_outlined,
+              ),
+              onPressed: () {
+                // Navigate to cart screen
+                Navigator.pushNamed(context, AppRoutes.cart);
+              }),
+          IconButton(
+              icon: const Icon(
+                Icons.favorite_outline,
+              ),
+              onPressed: () {
+                // Navigate to favorites screen
+                // Navigator.pushNamed(context, Routes.favorites);
+              }),
+        ],
       ),
       body: Consumer<CatalogProvider>(
         builder: (context, catalogProvider, child) {
@@ -113,11 +135,23 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 ),
 
                 // Categories
-                SizedBox(
-                  height: 50,
+                Container(
+                  height: 60,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0x0D000000), // 5% opacity black
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: catalogProvider.categories.length,
                     itemBuilder: (context, index) {
                       final category = catalogProvider.categories[index];
@@ -127,7 +161,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                               catalogProvider.filter.categories.isEmpty);
 
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 12),
                         child: CategoryChip(
                           category: category,
                           isSelected: isSelected,
@@ -141,34 +175,66 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 ),
 
                 // Filter and view type controls
-                Padding(
+                Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: AppTheme.goldColor.withAlpha(50),
+                        width: 1,
+                      ),
+                    ),
+                  ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Filter button
-                      OutlinedButton.icon(
-                        onPressed: _showFilterBottomSheet,
-                        icon: const Icon(Icons.filter_list),
-                        label: Text(TranslationKeys.catalogFilterButton.tr()),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.goldDark,
-                          side: BorderSide(color: AppTheme.goldDark),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                      
+                      IconButton(
+                        icon: Icon(
+                          Icons.filter_list,
+                          color: AppTheme.goldDark,
                         ),
+                        onPressed: _showFilterBottomSheet,
                       ),
 
-                      const Spacer(),
+                      // Filter button
+                      // ElevatedButton.icon(
+                      //   onPressed: _showFilterBottomSheet,
+                      //   icon: const Icon(Icons.filter_list, size: 18),
+                      //   label: Text(TranslationKeys.catalogFilterButton.tr()),
+                      //   style: ElevatedButton.styleFrom(
+                      //     foregroundColor: Colors.white,
+                      //     backgroundColor: AppTheme.goldColor,
+                      //     elevation: 0,
+                      //     padding: const EdgeInsets.symmetric(
+                      //         horizontal: 12, vertical: 8),
+                      //     shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(8),
+                      //     ),
+                      //   ),
+                      // ),
+
+                      const SizedBox(width: 8),
 
                       // View type toggle
-                      IconButton(
-                        onPressed: catalogProvider.toggleViewType,
-                        icon: Icon(
-                          catalogProvider.viewType == ViewType.grid
-                              ? Icons.view_list
-                              : Icons.grid_view,
-                          color: AppTheme.goldDark,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          onPressed: catalogProvider.toggleViewType,
+                          icon: Icon(
+                            catalogProvider.viewType == ViewType.grid
+                                ? Icons.view_list
+                                : Icons.grid_view,
+                            color: AppTheme.goldDark,
+                            size: 20,
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
                         ),
                       ),
                     ],
@@ -220,14 +286,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
         : _buildListView(catalogProvider);
   }
 
-  /// Build grid view for products
+  /// Build grid view for products with gold-themed styling
   Widget _buildGridView(CatalogProvider catalogProvider) {
     return GridView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.7, // Increased from 0.6 to give more height
+        childAspectRatio: 0.5, // Decreased to give more height to each card
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -235,52 +301,25 @@ class _CatalogScreenState extends State<CatalogScreen> {
           (catalogProvider.hasMorePages ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == catalogProvider.products.length) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: LoadingIndicator(size: 24),
+              padding: const EdgeInsets.all(16.0),
+              child: LoadingIndicator(
+                size: 24,
+                color: AppTheme.goldColor,
+              ),
             ),
           );
         }
 
         final product = catalogProvider.products[index];
-        return ProductCard(
-          product: product,
-          isFavorite: catalogProvider.isFavorite(product.id),
-          onFavoriteToggle: () => catalogProvider.toggleFavorite(product.id),
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              AppRoutes.productDetail,
-              arguments: product.id,
-            );
-          },
-        );
-      },
-    );
-  }
 
-  /// Build list view for products
-  Widget _buildListView(CatalogProvider catalogProvider) {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: catalogProvider.products.length +
-          (catalogProvider.hasMorePages ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == catalogProvider.products.length) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: LoadingIndicator(size: 24),
-            ),
-          );
-        }
-
-        final product = catalogProvider.products[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: ProductListItem(
+        // Add a subtle animation for the cards
+        return AnimatedOpacity(
+          duration: Duration(milliseconds: 300 + (index * 50)),
+          opacity: 1.0,
+          curve: Curves.easeInOut,
+          child: ProductCard(
             product: product,
             isFavorite: catalogProvider.isFavorite(product.id),
             onFavoriteToggle: () => catalogProvider.toggleFavorite(product.id),
@@ -291,6 +330,54 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 arguments: product.id,
               );
             },
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build list view for products with gold-themed styling
+  Widget _buildListView(CatalogProvider catalogProvider) {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: catalogProvider.products.length +
+          (catalogProvider.hasMorePages ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == catalogProvider.products.length) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LoadingIndicator(
+                size: 24,
+                color: AppTheme.goldColor,
+              ),
+            ),
+          );
+        }
+
+        final product = catalogProvider.products[index];
+
+        // Add a subtle animation for the list items
+        return AnimatedOpacity(
+          opacity: 1.0,
+          duration: Duration(milliseconds: 300 + (index * 30)),
+          curve: Curves.easeInOut,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: ProductListItem(
+              product: product,
+              isFavorite: catalogProvider.isFavorite(product.id),
+              onFavoriteToggle: () =>
+                  catalogProvider.toggleFavorite(product.id),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.productDetail,
+                  arguments: product.id,
+                );
+              },
+            ),
           ),
         );
       },

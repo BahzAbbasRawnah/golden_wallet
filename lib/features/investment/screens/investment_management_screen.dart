@@ -3,14 +3,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/user_investment_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/features/investment/widgets/user_investment_card.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 
 /// Investment management screen
 class InvestmentManagementScreen extends StatefulWidget {
-  const InvestmentManagementScreen({Key? key}) : super(key: key);
+  const InvestmentManagementScreen({super.key});
 
   @override
   State<InvestmentManagementScreen> createState() =>
@@ -54,7 +55,9 @@ class _InvestmentManagementScreenState extends State<InvestmentManagementScreen>
   Widget build(BuildContext context) {
     final investmentProvider = Provider.of<InvestmentProvider>(context);
     final userInvestments = investmentProvider.userInvestments;
-    final isRtl = Directionality.of(context) == TextDirection.RTL;
+    // Check if the text direction is right-to-left
+    final isRtl =
+        Directionality.of(context).index == 0; // TextDirection.rtl has index 0
 
     // Filter investments by status
     final activeInvestments = userInvestments
@@ -155,7 +158,7 @@ class _InvestmentManagementScreenState extends State<InvestmentManagementScreen>
   /// Build investments list
   Widget _buildInvestmentsList({
     required BuildContext context,
-    required List<UserInvestmentModel> investments,
+    required List<Investment> investments,
     required String emptyMessage,
     required String emptyDescription,
     bool showEmptyButton = false,
@@ -176,19 +179,22 @@ class _InvestmentManagementScreenState extends State<InvestmentManagementScreen>
         final investment = investments[index];
         final investmentProvider =
             Provider.of<InvestmentProvider>(context, listen: false);
-        final plan =
-            investmentProvider.getInvestmentPlanById(investment.planId);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
-          child: UserInvestmentCard(
-            investment: investment,
-            plan: plan,
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                AppRoutes.investmentDetail,
-                arguments: investment.id,
+          child: FutureBuilder<InvestmentPlan?>(
+            future: investmentProvider.getInvestmentPlanById(investment.planId),
+            builder: (context, snapshot) {
+              return UserInvestmentCard(
+                investment: investment,
+                plan: snapshot.data,
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.investmentDetail,
+                    arguments: investment.id,
+                  );
+                },
               );
             },
           ),

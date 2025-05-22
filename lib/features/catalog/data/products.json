@@ -1,0 +1,152 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "سبيكة ذهب 24 قيراط - 10 جرام",
+      "description": "سبيكة ذهب نقي عيار 24 قيراط، مثالية للاستثمار والمجموعات.",
+      "category": {
+        "id": "bars",
+        "name": "سبائك",
+        "description": "سبائك ذهبية للاستثمار",
+        "iconName": "view_module"
+      },
+      "price": 2400.0,
+      "weight": 10.0,
+      "purity": "24K",
+      "images": [
+        "assets/images/products/gold_bar_1.jpg",
+        "assets/images/products/gold_bar_2.jpg"
+      ],
+      "specifications": {
+        "المادة": "ذهب",
+        "النقاء": "99.99%",
+        "الوزن": "10 جرام",
+        "الأبعاد": "45مم × 25مم × 1.5مم",
+        "الشركة المصنعة": "مصنع المحفظة الذهبية"
+      },
+      "availability": "inStock",
+      "createdAt": "2025-05-01T10:00:00Z",
+      "isFeatured": true
+    },
+    {
+      "id": "2",
+      "name": "عملة ذهبية - جنيه ذهب",
+      "description": "عملة ذهبية كلاسيكية، مثالية للاستثمار والمجموعات.",
+      "category": {
+        "id": "coins",
+        "name": "عملات",
+        "description": "عملات ذهبية للاستثمار والهواة",
+        "iconName": "monetization_on"
+      },
+      "price": 1200.0,
+      "weight": 8.0,
+      "purity": "22K",
+      "images": [
+        "assets/images/products/gold_coin_1.jpg",
+        "assets/images/products/gold_coin_2.jpg"
+      ],
+      "specifications": {
+        "المادة": "ذهب",
+        "النقاء": "91.67%",
+        "الوزن": "8 جرام",
+        "القطر": "22مم",
+        "السماكة": "1.5مم",
+        "الشركة المصنعة": "دار سك العملات الذهبية"
+      },
+      "availability": "inStock",
+      "createdAt": "2025-05-02T10:00:00Z",
+      "isFeatured": true
+    },
+    {
+      "id": "3",
+      "name": "خاتم ذهبي مع الماس",
+      "description": "خاتم ذهبي فاخر مرصع بالماس، تصميم أنيق وعصري.",
+      "category": {
+        "id": "jewelry",
+        "name": "مجوهرات",
+        "description": "مجوهرات ذهبية فاخرة",
+        "iconName": "diamond"
+      },
+      "price": 3500.0,
+      "weight": 5.2,
+      "purity": "18K",
+      "images": [
+        "assets/images/products/gold_ring_1.jpg",
+        "assets/images/products/gold_ring_2.jpg"
+      ],
+      "specifications": {
+        "المادة": "ذهب مع الماس",
+        "النقاء": "75%",
+        "الوزن": "5.2 جرام",
+        "حجم الخاتم": "متوفر من 5 إلى 10",
+        "وزن الماس": "0.5 قيراط",
+        "نقاء الماس": "VVS"
+      },
+      "availability": "inStock",
+      "createdAt": "2025-05-03T10:00:00Z",
+      "isFeatured": true,
+      "discountPercentage": 5.0,
+      "makingCharges": 350.0
+    },
+    {
+      "id": "4",
+      "name": "سوار ذهبي",
+      "description": "سوار ذهبي أنيق بتصميم كلاسيكي، مناسب للمناسبات الرسمية والعادية.",
+      "category": {
+        "id": "jewelry",
+        "name": "مجوهرات",
+        "description": "مجوهرات ذهبية فاخرة",
+        "iconName": "diamond"
+      },
+      "price": 2800.0,
+      "weight": 12.5,
+      "purity": "21K",
+      "images": [
+        "assets/images/products/gold_bracelet_1.jpg",
+        "assets/images/products/gold_bracelet_2.jpg"
+      ],
+      "specifications": {
+        "المادة": "ذهب",
+        "النقاء": "87.5%",
+        "الوزن": "12.5 جرام",
+        "الطول": "19 سم",
+        "العرض": "0.8 سم",
+        "نوع القفل": "مشبك أمان"
+      },
+      "availability": "inStock",
+      "createdAt": "2025-05-04T10:00:00Z",
+      "isFeatured": false,
+      "makingCharges": 280.0
+    },
+    {
+      "id": "5",
+      "name": "ساعة ذهبية فاخرة",
+      "description": "ساعة ذهبية فاخرة بتصميم أنيق وآلية سويسرية دقيقة.",
+      "category": {
+        "id": "watches",
+        "name": "ساعات",
+        "description": "ساعات ذهبية فاخرة",
+        "iconName": "watch"
+      },
+      "price": 12000.0,
+      "weight": 85.0,
+      "purity": "18K",
+      "images": [
+        "assets/images/products/gold_watch_1.jpg",
+        "assets/images/products/gold_watch_2.jpg"
+      ],
+      "specifications": {
+        "المادة": "ذهب",
+        "النقاء": "75%",
+        "الوزن": "85 جرام",
+        "قطر الساعة": "40 مم",
+        "نوع الآلية": "أوتوماتيكية سويسرية",
+        "مقاومة الماء": "حتى 50 متر"
+      },
+      "availability": "lowStock",
+      "createdAt": "2025-05-05T10:00:00Z",
+      "isFeatured": true,
+      "discountPercentage": 10.0
+    }
+  ]
+}

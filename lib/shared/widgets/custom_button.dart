@@ -175,11 +175,11 @@ class CustomButton extends StatelessWidget {
         children: [
           Icon(icon, size: 18),
           const SizedBox(width: 8),
-          Text(text, style: TextStyle(fontWeight: FontWeight.w600)),
+          Text(text, style: TextStyle(fontWeight: FontWeight.w600, color: textColor)),
         ],
       );
     } else {
-      return Text(text, style: TextStyle(fontWeight: FontWeight.w600));
+      return Text(text, style: TextStyle(fontWeight: FontWeight.w600, color: textColor));
     }
   }
 }

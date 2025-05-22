@@ -14,8 +14,11 @@ class AppConstants {
   static const String routePhoneVerification = '/phone-verification';
   static const String routeDashboard = '/dashboard';
   static const String routeBuySell = '/buy-sell';
+  static const String routeGoldPriceHistory = '/gold-price-history';
   static const String routeDepositWithdraw = '/deposit-withdraw';
   static const String routeCatalog = '/catalog';
+  static const String routeCart = '/cart';
+  static const String routeCheckout = '/checkout';
   static const String routeProductDetail = '/product-detail';
   static const String routeInvestment = '/investment';
   static const String routeInvestmentDetail = '/investment-detail';

@@ -1,55 +1,54 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:golden_wallet/config/constants.dart';
-import 'package:golden_wallet/config/localization.dart';
+import 'package:flutter/services.dart';
+import 'package:golden_wallet/features/buy_sell/widgets/amount_input_field.dart';
+import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
 import 'package:golden_wallet/features/buy_sell/models/gold_models.dart';
+import 'package:golden_wallet/features/buy_sell/providers/gold_price_provider.dart';
+import 'package:golden_wallet/features/buy_sell/widgets/gold_category_tab.dart';
+import 'package:golden_wallet/features/buy_sell/widgets/gold_price_chart.dart';
+import 'package:golden_wallet/features/buy_sell/widgets/gold_type_selector.dart';
+import 'package:golden_wallet/features/buy_sell/widgets/payment_method_card.dart';
+import 'package:golden_wallet/features/buy_sell/widgets/transaction_summary_card.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
-import 'package:golden_wallet/shared/widgets/custom_card.dart';
-import 'package:golden_wallet/shared/widgets/custom_text_field.dart';
+import 'package:golden_wallet/shared/widgets/custom_messages.dart';
 
-/// Buy/Sell Gold Screen
+///  Buy/Sell Gold Screen
 class BuySellScreen extends StatefulWidget {
-  const BuySellScreen({Key? key}) : super(key: key);
+  const BuySellScreen({super.key});
 
   @override
   State<BuySellScreen> createState() => _BuySellScreenState();
 }
 
 class _BuySellScreenState extends State<BuySellScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _totalController = TextEditingController();
   final TextEditingController _barsCountController = TextEditingController();
 
-  // Gold category and type selection
-  GoldCategory _selectedCategory = GoldCategory.grams;
-  String _selectedGoldType = '24K';
-  GoldGramType _selectedGramType = goldGramTypes.last; // 24K by default
-  GoldPoundWeight _selectedPoundWeight =
-      goldPoundWeights.first; // 1g by default
-  int _barsCount = 1;
-
   // Payment methods
-  bool _useWalletPayment = false;
-  bool _useCashTransfer = false;
-
-  // Transaction values
-  double _currentPrice = 2245.67;
-  double _amount = 0.0;
-  double _total = 0.0;
+  String? _selectedPaymentMethodId;
   bool _isLoading = false;
+  bool _isPriceChartExpanded = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
-    _amountController.addListener(_calculateTotal);
-    _barsCountController.text = _barsCount.toString();
+    _amountController.addListener(_updateAmount);
     _barsCountController.addListener(_updateBarsCount);
+
+    // Initialize the provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<GoldPriceProvider>(context, listen: false);
+      provider.initialize();
+    });
   }
 
   @override
@@ -61,16 +60,34 @@ class _BuySellScreenState extends State<BuySellScreen>
     super.dispose();
   }
 
+  // Update amount from text field
+  void _updateAmount() {
+    if (_amountController.text.isNotEmpty) {
+      try {
+        final amount = double.parse(_amountController.text);
+        final provider = Provider.of<GoldPriceProvider>(context, listen: false);
+        provider.setAmount(amount);
+        _totalController.text = provider.total.toStringAsFixed(2);
+      } catch (e) {
+        // Invalid input, ignore
+      }
+    } else {
+      final provider = Provider.of<GoldPriceProvider>(context, listen: false);
+      provider.setAmount(0.0);
+      _totalController.text = '0.00';
+    }
+  }
+
   // Update bars count from text field
   void _updateBarsCount() {
     if (_barsCountController.text.isNotEmpty) {
       try {
         final count = int.parse(_barsCountController.text);
         if (count >= 1 && count <= 20) {
-          setState(() {
-            _barsCount = count;
-            _calculateTotal();
-          });
+          final provider =
+              Provider.of<GoldPriceProvider>(context, listen: false);
+          provider.setBarsCount(count);
+          _totalController.text = provider.total.toStringAsFixed(2);
         }
       } catch (e) {
         // Invalid input, ignore
@@ -81,129 +98,35 @@ class _BuySellScreenState extends State<BuySellScreen>
   // Handle tab change
   void _handleTabChange() {
     if (_tabController.indexIsChanging) {
-      setState(() {
-        _amountController.clear();
-        _totalController.clear();
-        _amount = 0.0;
-        _total = 0.0;
-      });
+      final provider = Provider.of<GoldPriceProvider>(context, listen: false);
+      provider.setIsBuying(_tabController.index == 0);
+      _amountController.clear();
+      _totalController.text = '0.00';
     }
-  }
-
-  // Calculate total based on amount and gold category
-  void _calculateTotal() {
-    setState(() {
-      switch (_selectedCategory) {
-        case GoldCategory.grams:
-          if (_amountController.text.isNotEmpty) {
-            try {
-              _amount = double.parse(_amountController.text);
-              _total = _amount * _getPriceForGoldType(_selectedGramType.karat);
-              _totalController.text = _total.toStringAsFixed(2);
-            } catch (e) {
-              // Handle parsing error
-              _amount = 0.0;
-              _total = 0.0;
-              _totalController.text = '';
-            }
-          } else {
-            _amount = 0.0;
-            _total = 0.0;
-            _totalController.text = '';
-          }
-          break;
-
-        case GoldCategory.pounds:
-          if (_amountController.text.isNotEmpty) {
-            try {
-              _amount = double.parse(_amountController.text);
-              // Calculate based on pound weight (in grams) and 24K price
-              _total = _amount *
-                  _selectedPoundWeight.grams *
-                  _getPriceForGoldType('24K') /
-                  31.1; // Convert from oz to gram
-              _totalController.text = _total.toStringAsFixed(2);
-            } catch (e) {
-              // Handle parsing error
-              _amount = 0.0;
-              _total = 0.0;
-              _totalController.text = '';
-            }
-          } else {
-            _amount = 0.0;
-            _total = 0.0;
-            _totalController.text = '';
-          }
-          break;
-
-        case GoldCategory.bars:
-          // For bars, we use the bars count instead of amount
-          // Each bar is 1 oz of 24K gold
-          _amount = _barsCount.toDouble();
-          _total = _amount * _getPriceForGoldType('24K');
-          _totalController.text = _total.toStringAsFixed(2);
-          break;
-      }
-    });
-  }
-
-  // Get price for selected gold type
-  double _getPriceForGoldType(String type) {
-    switch (type) {
-      case '24K':
-        return 2245.67;
-      case '22K':
-        return 2058.30;
-      case '21K':
-        return 1965.21;
-      case '20K':
-        return 1871.39;
-      case '18K':
-        return 1684.25;
-      default:
-        return 2245.67;
-    }
-  }
-
-  // Change gold category
-  void _changeGoldCategory(GoldCategory category) {
-    setState(() {
-      _selectedCategory = category;
-      // Reset values
-      _amountController.text = '';
-      _totalController.text = '';
-      _amount = 0.0;
-      _total = 0.0;
-
-      // Update calculation
-      _calculateTotal();
-    });
   }
 
   // Execute transaction
   Future<void> _executeTransaction() async {
     // Validate payment method
-    if (!_useWalletPayment && !_useCashTransfer) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'selectPaymentMethod'.tr(),
-          ),
-          backgroundColor: AppTheme.errorColor,
-        ),
+    if (_selectedPaymentMethodId == null) {
+      context.showErrorMessage(
+        'selectPaymentMethod'.tr(),
+        action: CustomSnackBarMessages.createDismissAction(() {
+          // Dismiss action
+        }),
       );
       return;
     }
 
     // Validate amount
-    if (_amount <= 0 || _total <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'invalidAmount'.tr(),
-          ),
-          backgroundColor: AppTheme.errorColor,
-        ),
+    final provider = Provider.of<GoldPriceProvider>(context, listen: false);
+    if (provider.amount <= 0 &&
+        provider.selectedCategory != GoldCategory.bars) {
+      context.showErrorMessage(
+        'invalidAmount'.tr(),
+        action: CustomSnackBarMessages.createDismissAction(() {
+          // Dismiss action
+        }),
       );
       return;
     }
@@ -212,590 +135,620 @@ class _BuySellScreenState extends State<BuySellScreen>
       _isLoading = true;
     });
 
+    // Show loading message
+    context.showLoadingMessage(
+      SnackBarTranslationKeys.processingRequest.tr(),
+      showProgress: true,
+    );
+
     // Simulate transaction delay
     await Future.delayed(const Duration(seconds: 2));
 
     // Show success message if still mounted
     if (mounted) {
-      final localizations = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _tabController.index == 0
-                ? 'buySuccess'.tr()
-                : 'sellSuccess'.tr(),
-          ),
-          backgroundColor: AppTheme.successColor,
+      // Show success message
+      context.showSuccessMessage(
+        _tabController.index == 0 ? 'buySuccess'.tr() : 'sellSuccess'.tr(),
+        duration: const Duration(seconds: 3),
+        action: CustomSnackBarMessages.createAction(
+          label: 'viewTransactions'.tr(),
+          onPressed: () {
+            Navigator.pushNamed(context, AppRoutes.transactions);
+          },
         ),
       );
 
       setState(() {
         _isLoading = false;
         _amountController.clear();
-        _totalController.clear();
-        _amount = 0.0;
-        _total = 0.0;
-        _useWalletPayment = false;
-        _useCashTransfer = false;
+        _totalController.text = '0.00';
+        _selectedPaymentMethodId = null;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'buySellGold'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
+      appBar: CustomAppBar(
+        title: 'buySellGold'.tr(),
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.goldPriceHistory);
+            },
+            tooltip: 'Price History',
           ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Tab bar
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Color(0xFF2A2A2A)
-                    : Colors.grey[200],
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  gradient: AppTheme.goldGradient,
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor:
-                    Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.grey[700],
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-                tabs: [
-                  Tab(text: 'buy'.tr()),
-                  Tab(text: 'sell'.tr()),
+      body: Consumer<GoldPriceProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.error.isNotEmpty) {
+            // Show error message using CustomSnackBarMessages
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.showErrorMessage(
+                provider.error,
+                action: CustomSnackBarMessages.createRetryAction(() {
+                  // Refresh data
+                  final provider =
+                      Provider.of<GoldPriceProvider>(context, listen: false);
+                  provider.initialize();
+                }),
+              );
+            });
+
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: AppTheme.errorColor,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    provider.error,
+                    style: TextStyle(color: AppTheme.errorColor),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final provider = Provider.of<GoldPriceProvider>(context,
+                          listen: false);
+                      provider.initialize();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: Text(SnackBarTranslationKeys.retry.tr()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.goldDark,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
                 ],
               ),
-            ),
+            );
+          }
 
-            // Current price
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'currentPrice'.tr(),
-                    style: Theme.of(context).textTheme.titleMedium,
+          return SafeArea(
+            child: Column(
+              children: [
+                // Tab bar
+                Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withAlpha(35),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  Row(
+                  child: TabBar(
+                    controller: _tabController,
+                    dividerColor: Colors.transparent,
+                    indicator: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Theme.of(context).primaryColor, // اللون النشط
+                    ),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.black87,
+                    labelStyle: Theme.of(context).textTheme.titleMedium,
+                    unselectedLabelStyle:
+                        Theme.of(context).textTheme.bodyMedium,
+                    tabs: [
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.shopping_cart_outlined),
+                            const SizedBox(width: 6),
+                            Text('buy'.tr()),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.sell_outlined),
+                            const SizedBox(width: 6),
+                            Text('sell'.tr()),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Gold price chart and current price
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDarkMode
+                          ? [
+                              Colors.grey[850]!,
+                              Colors.grey[900]!,
+                            ]
+                          : [
+                              Colors.white,
+                              Colors.grey[100]!,
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: AppTheme.goldColor.withAlpha(50),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Price header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'currentPrice'.tr(),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    '\$${provider.getCurrentPrice().toStringAsFixed(2)}/g',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.goldDark,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: provider.isPriceUp()
+                                          ? AppTheme.successColor.withAlpha(25)
+                                          : AppTheme.goldPriceDownColor
+                                              .withAlpha(25),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          provider.isPriceUp()
+                                              ? Icons.arrow_upward
+                                              : Icons.arrow_downward,
+                                          color: provider.isPriceUp()
+                                              ? AppTheme.successColor
+                                              : AppTheme.goldPriceDownColor,
+                                          size: 12,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          provider.getPriceChangePercentage(),
+                                          style: TextStyle(
+                                            color: provider.isPriceUp()
+                                                ? AppTheme.successColor
+                                                : AppTheme.goldPriceDownColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.goldColor.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time,
+                                      color: AppTheme.goldDark,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'livePrice'.tr(),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.goldDark,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Chart toggle button
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _isPriceChartExpanded =
+                                        !_isPriceChartExpanded;
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.goldColor.withAlpha(30),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Icon(
+                                    _isPriceChartExpanded
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: AppTheme.goldDark,
+                                    size: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      // Price chart
+                      if (_isPriceChartExpanded)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 300),
+                            opacity: _isPriceChartExpanded ? 1.0 : 0.0,
+                            child: SizedBox(
+                              height: 120,
+                              child: GoldPriceChart(
+                                height: 120,
+                                isUptrend: provider.isPriceUp(),
+                                showDetailTooltip: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Gold category tabs
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '\$${_getPriceForGoldType(_selectedGoldType).toStringAsFixed(2)}/oz',
+                        'goldCategory'.tr(),
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.goldDark,
                                 ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.successColor.withAlpha(25),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '+1.2%',
-                          style: TextStyle(
-                            color: AppTheme.successColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          GoldCategoryTab(
+                            category: GoldCategory.grams,
+                            label: 'goldGrams'.tr(),
+                            isSelected:
+                                provider.selectedCategory == GoldCategory.grams,
+                            onTap: () =>
+                                provider.setCategory(GoldCategory.grams),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          GoldCategoryTab(
+                            category: GoldCategory.pounds,
+                            label: 'goldPounds'.tr(),
+                            isSelected: provider.selectedCategory ==
+                                GoldCategory.pounds,
+                            onTap: () =>
+                                provider.setCategory(GoldCategory.pounds),
+                          ),
+                          const SizedBox(width: 12),
+                          GoldCategoryTab(
+                            category: GoldCategory.bars,
+                            label: 'goldBars'.tr(),
+                            isSelected:
+                                provider.selectedCategory == GoldCategory.bars,
+                            onTap: () =>
+                                provider.setCategory(GoldCategory.bars),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-
-            // Gold category tabs
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'goldType'.tr(),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _buildCategoryTab(
-                        context,
-                        GoldCategory.grams,
-                        'goldGrams'.tr(),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildCategoryTab(
-                        context,
-                        GoldCategory.pounds,
-                        'goldPounds'.tr(),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildCategoryTab(
-                        context,
-                        GoldCategory.bars,
-                        'goldBars'.tr(),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Tab content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildTransactionForm(context, isBuy: true),
-                  _buildTransactionForm(context, isBuy: false),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Build category tab
-  Widget _buildCategoryTab(
-    BuildContext context,
-    GoldCategory category,
-    String title,
-  ) {
-    final isSelected = _selectedCategory == category;
-
-    return Expanded(
-      child: InkWell(
-        onTap: () => _changeGoldCategory(category),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppTheme.goldColor.withOpacity(0.2)
-                : Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isSelected ? AppTheme.goldColor : Colors.transparent,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                category.icon,
-                color: isSelected ? AppTheme.goldDark : Colors.grey,
-                size: 24,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isSelected ? AppTheme.goldDark : null,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
                 ),
-              ),
-            ],
-          ),
-        ),
+
+                // Tab content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildTransactionForm(context, provider, isBuy: true),
+                      _buildTransactionForm(context, provider, isBuy: false),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
   // Build transaction form
-  Widget _buildTransactionForm(BuildContext context, {required bool isBuy}) {
+  Widget _buildTransactionForm(
+    BuildContext context,
+    GoldPriceProvider provider, {
+    required bool isBuy,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Gold type selector based on category
-          if (_selectedCategory == GoldCategory.grams) ...[
-            _buildGoldTypeSelector(context),
-            const SizedBox(height: 16),
-          ] else if (_selectedCategory == GoldCategory.pounds) ...[
-            _buildPoundWeightSelector(context),
-            const SizedBox(height: 16),
-          ] else if (_selectedCategory == GoldCategory.bars) ...[
-            _buildBarsCountSelector(context),
-            const SizedBox(height: 16),
-          ],
-
-          // Amount field (not shown for bars)
-          if (_selectedCategory != GoldCategory.bars) ...[
-            CustomTextField(
-              controller: _amountController,
-              label: 'amountOz'.tr(),
-              hint: '0.00',
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              prefixIcon: Icons.scale,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Total field
-          CustomTextField(
-            controller: _totalController,
-            label: 'totalAmount'.tr(),
-            hint: '0.00',
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            prefixIcon: Icons.attach_money,
-            readOnly: true,
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // Gold type selector based on category
+        if (provider.selectedCategory == GoldCategory.grams) ...[
+          GoldTypeSelector(
+            label: 'goldKarat'.tr(),
+            options: provider.goldKarats,
+            selectedOption: provider.selectedGoldType!,
+            onChanged: (newValue) {
+              provider.setGoldType(newValue);
+              _totalController.text = provider.total.toStringAsFixed(2);
+            },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+        ] else if (provider.selectedCategory == GoldCategory.pounds)
+          ...[
 
-          // Payment method
-          Text(
-            'paymentMethod'.tr(),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-
-          // Payment method checkboxes
-          Row(
+        ] else if (provider.selectedCategory == GoldCategory.bars) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildPaymentMethodCheckbox(
-                  context,
-                  title: 'walletPayment'.tr(),
-                  icon: Icons.account_balance_wallet,
-                  isSelected: _useWalletPayment,
-                  onChanged: (value) {
-                    setState(() {
-                      _useWalletPayment = value ?? false;
-                    });
-                  },
-                ),
+              Text(
+                'barSize'.tr(),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildPaymentMethodCheckbox(
-                  context,
-                  title: 'cashTransfer'.tr(),
-                  icon: Icons.payments,
-                  isSelected: _useCashTransfer,
-                  onChanged: (value) {
-                    setState(() {
-                      _useCashTransfer = value ?? false;
-                    });
-                  },
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.goldColor.withAlpha(50),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(13),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<GoldBar>(
+                    value: provider.selectedBar,
+                    isExpanded: true,
+                    icon: Icon(
+                      Icons.arrow_drop_down,
+                      color: AppTheme.goldDark,
+                    ),
+                    items: provider.goldBars.map((GoldBar bar) {
+                      return DropdownMenuItem<GoldBar>(
+                        value: bar,
+                        child: Text(
+                          '${bar.name} (${bar.grams}g)',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        _totalController.text =
+                            provider.total.toStringAsFixed(2);
+                      }
+                    },
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
-
-          // Transaction button
-          Container(
-            decoration: BoxDecoration(
-              gradient: AppTheme.goldGradient,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryColor.withAlpha(70),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: CustomButton(
-              text: isBuy
-                  ? 'buyNow'.tr()
-                  : 'sellNow'.tr(),
-              onPressed: _executeTransaction,
-              isLoading: _isLoading,
-              type: ButtonType.primary,
-              backgroundColor: Colors.transparent,
-              textColor: Colors.white,
-            ),
+          const SizedBox(height: 16),
+          AmountInputField(
+            label: 'barsCount'.tr(),
+            hint: '1-20',
+            controller: _barsCountController,
+            unit: 'bars'.tr(),
+            icon: Icons.view_module,
+            showIncrement: true,
+            onIncrement: provider.incrementBarsCount,
+            onDecrement: provider.decrementBarsCount,
+            helperText: 'eachBar24k'.tr(),
           ),
-          const SizedBox(height: 24),
-
-          // Transaction details
-          CustomCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'transactionDetails'.tr(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                _buildDetailRow(
-                  context,
-                  'pricePerOz'.tr(),
-                  '\$${_getPriceForGoldType(_selectedCategory == GoldCategory.grams ? _selectedGramType.karat : '24K').toStringAsFixed(2)}',
-                ),
-                const SizedBox(height: 8),
-                _buildDetailRow(
-                  context,
-                  'amount'.tr(),
-                  '${_amount.toStringAsFixed(2)} ${_selectedCategory == GoldCategory.bars ? 'bars_count'.tr().toLowerCase() : 'oz'}',
-                ),
-                const SizedBox(height: 8),
-                _buildDetailRow(
-                  context,
-                  'fee'.tr(),
-                  '\$${(_total * 0.01).toStringAsFixed(2)}',
-                ),
-                const Divider(height: 24),
-                _buildDetailRow(
-                  context,
-                  'total'.tr(),
-                  '\$${(_total + (_total * 0.01)).toStringAsFixed(2)}',
-                  isBold: true,
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 16),
         ],
-      ),
-    );
-  }
 
-  // Build gold type selector for grams
-  Widget _buildGoldTypeSelector(BuildContext context) {
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'goldType'.tr(),
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[800]
-                : Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppTheme.goldColor.withAlpha(50),
-              width: 1,
-            ),
+        // Amount field (not shown for bars)
+        if (provider.selectedCategory != GoldCategory.bars) ...[
+          AmountInputField(
+            label: 'amount'.tr(),
+            hint: '0.00',
+            controller: _amountController,
+            unit:
+                provider.selectedCategory == GoldCategory.grams ? 'g' : 'units',
+            icon: Icons.scale,
+            onChanged: (value) => _updateAmount(),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<GoldGramType>(
-              value: _selectedGramType,
-              isExpanded: true,
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: AppTheme.goldDark,
-              ),
-              items: goldGramTypes.map((GoldGramType type) {
-                return DropdownMenuItem<GoldGramType>(
-                  value: type,
-                  child: Text(type.translationKey.tr()),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    _selectedGramType = newValue;
-                    _selectedGoldType = newValue.karat;
-                    _calculateTotal();
-                  });
-                }
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Build pound weight selector
-  Widget _buildPoundWeightSelector(BuildContext context) {
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'weight'.tr(),
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[800]
-                : Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppTheme.goldColor.withAlpha(50),
-              width: 1,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<GoldPoundWeight>(
-              value: _selectedPoundWeight,
-              isExpanded: true,
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: AppTheme.goldDark,
-              ),
-              items: goldPoundWeights.map((GoldPoundWeight weight) {
-                return DropdownMenuItem<GoldPoundWeight>(
-                    value: weight,
-                    child: Text(weight.translationKey.tr()));
-              }).toList(),
-              onChanged: (newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    _selectedPoundWeight = newValue;
-                    _calculateTotal();
-                  });
-                }
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Build bars count selector
-  Widget _buildBarsCountSelector(BuildContext context) {
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'barsCount'.tr(),
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
-        CustomTextField(
-          controller: _barsCountController,
-          hint: '1-20',
-          keyboardType: TextInputType.number,
-          prefixIcon: Icons.view_module,
-        ),
-      ],
-    );
-  }
-
-  // Build payment method checkbox
-  Widget _buildPaymentMethodCheckbox(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required bool isSelected,
-    required ValueChanged<bool?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[800]
-            : Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isSelected ? AppTheme.goldColor : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-            Checkbox(
-            value: isSelected,
-            onChanged: onChanged,
-            activeColor: AppTheme.goldDark,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-         
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: isSelected ? AppTheme.goldDark : null,
-              ),
-            ),
-          ),
-         Icon(
-            icon,
-            color: isSelected ? AppTheme.goldDark : Colors.grey,
-            size: 20,
-          ),
+          const SizedBox(height: 16),
         ],
-      ),
-    );
-  }
 
-  // Build detail row
-  Widget _buildDetailRow(
-    BuildContext context,
-    String label,
-    String value, {
-    bool isBold = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
+        // Total field
+        AmountInputField(
+          label: 'totalAmount'.tr(),
+          hint: '0.00',
+          controller: _totalController,
+          unit: '\$',
+          icon: Icons.attach_money,
+          readOnly: true,
+        ),
+        const SizedBox(height: 24),
+
+        // Payment method
         Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[300]
-                    : Colors.grey[600],
+          'paymentMethod'.tr(),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
         ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                color: isBold ? AppTheme.goldDark : null,
+        const SizedBox(height: 12),
+
+        // Payment method cards
+        Column(
+          children: provider.paymentMethods.map((method) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: PaymentMethodCard(
+                title: method.name,
+                icon: method.icon,
+                isSelected: _selectedPaymentMethodId == method.id,
+                onTap: () {
+                  setState(() {
+                    _selectedPaymentMethodId = method.id;
+                  });
+                },
+                subtitle: method.id == 'wallet'
+                    ? '${'walletBalance'.tr()}: \$5,240.00'
+                    : null,
               ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 32),
+
+        // Transaction button
+        Container(
+          decoration: BoxDecoration(
+            gradient: AppTheme.goldGradient,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withAlpha(70),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: CustomButton(
+            text: isBuy ? 'buyNow'.tr() : 'sellNow'.tr(),
+            onPressed: _executeTransaction,
+            isLoading: _isLoading,
+            type: ButtonType.primary,
+            backgroundColor: Colors.transparent,
+            textColor: Colors.white,
+            height: 56,
+            icon: isBuy ? Icons.shopping_cart : Icons.sell,
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Transaction details
+        TransactionSummaryCard(
+          title: 'transactionDetails'.tr(),
+          details: [
+            TransactionDetail(
+              label: 'pricePerGram'.tr(),
+              value: '\$${provider.getCurrentPrice().toStringAsFixed(2)}',
+            ),
+            TransactionDetail(
+              label: 'amount'.tr(),
+              value: provider.selectedCategory == GoldCategory.bars
+                  ? '${provider.barsCount} ${provider.selectedBar?.name ?? ""}'
+                  : '${provider.amount.toStringAsFixed(2)} ${provider.selectedCategory == GoldCategory.grams ? "g" : "units"}',
+            ),
+            TransactionDetail(
+              label: 'fee'.tr(),
+              value: '\$${(provider.total * 0.01).toStringAsFixed(2)}',
+            ),
+          ],
+          total: TransactionDetail(
+            label: 'total'.tr(),
+            value:
+                '\$${(provider.total + (provider.total * 0.01)).toStringAsFixed(2)}',
+          ),
         ),
       ],
     );

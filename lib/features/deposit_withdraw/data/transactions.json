@@ -1,0 +1,168 @@
+{
+  "transactions": [
+    {
+      "id": "dw-001",
+      "userId": "user-123",
+      "type": "deposit",
+      "amount": 5000.0,
+      "currency": "ريال يمني",
+      "status": "completed",
+      "paymentMethod": "تحويل بنكي",
+      "paymentMethodId": "bank_transfer",
+      "date": "2025-05-15T10:30:00Z",
+      "completedDate": "2025-05-17T14:20:00Z",
+      "reference": "DEP-BT-001",
+      "description": "إيداع عن طريق التحويل البنكي",
+      "fees": 0.0,
+      "paymentDetails": {
+        "accountNumber": "XXXX-XXXX-XXXX-1234",
+        "accountName": "محمد أحمد",
+        "bankName": "بنك الإمارات الوطني"
+      }
+    },
+    {
+      "id": "dw-002",
+      "userId": "user-123",
+      "type": "withdraw",
+      "amount": 2000.0,
+      "currency": "ريال يمني",
+      "status": "completed",
+      "paymentMethod": "تحويل بنكي",
+      "paymentMethodId": "bank_transfer",
+      "date": "2025-05-18T15:45:00Z",
+      "completedDate": "2025-05-20T11:10:00Z",
+      "reference": "WDR-BT-001",
+      "description": "سحب عن طريق التحويل البنكي",
+      "fees": 0.0,
+      "paymentDetails": {
+        "accountNumber": "XXXX-XXXX-XXXX-1234",
+        "accountName": "محمد أحمد",
+        "bankName": "بنك الإمارات الوطني"
+      }
+    },
+    {
+      "id": "dw-003",
+      "userId": "user-123",
+      "type": "deposit",
+      "amount": 3000.0,
+      "currency": "ريال يمني",
+      "status": "completed",
+      "paymentMethod": "بطاقة ائتمان",
+      "paymentMethodId": "credit_card",
+      "date": "2025-05-19T09:15:00Z",
+      "completedDate": "2025-05-19T09:15:00Z",
+      "reference": "DEP-CC-001",
+      "description": "إيداع عن طريق بطاقة الائتمان",
+      "fees": 45.0,
+      "paymentDetails": {
+        "cardNumber": "XXXX-XXXX-XXXX-5678",
+        "cardHolderName": "محمد أحمد"
+      }
+    },
+    {
+      "id": "dw-004",
+      "userId": "user-123",
+      "type": "deposit",
+      "amount": 1000.0,
+      "currency": "ريال يمني",
+      "status": "pending",
+      "paymentMethod": "تحويل بنكي",
+      "paymentMethodId": "bank_transfer",
+      "date": "2025-05-21T16:30:00Z",
+      "reference": "DEP-BT-002",
+      "description": "إيداع عن طريق التحويل البنكي",
+      "fees": 0.0,
+      "paymentDetails": {
+        "accountNumber": "XXXX-XXXX-XXXX-1234",
+        "accountName": "محمد أحمد",
+        "bankName": "بنك الإمارات الوطني"
+      }
+    },
+    {
+      "id": "dw-005",
+      "userId": "user-123",
+      "type": "withdraw",
+      "amount": 1500.0,
+      "currency": "ريال يمني",
+      "status": "processing",
+      "paymentMethod": "تحويل بنكي",
+      "paymentMethodId": "bank_transfer",
+      "date": "2025-05-22T11:20:00Z",
+      "reference": "WDR-BT-002",
+      "description": "سحب عن طريق التحويل البنكي",
+      "fees": 0.0,
+      "paymentDetails": {
+        "accountNumber": "XXXX-XXXX-XXXX-1234",
+        "accountName": "محمد أحمد",
+        "bankName": "بنك الإمارات الوطني"
+      }
+    },
+    {
+      "id": "dw-006",
+      "userId": "user-123",
+      "type": "deposit",
+      "amount": 10000.0,
+      "currency": "ريال يمني",
+      "status": "completed",
+      "paymentMethod": "إيداع نقدي",
+      "paymentMethodId": "cash_deposit",
+      "date": "2025-05-10T14:00:00Z",
+      "completedDate": "2025-05-10T14:00:00Z",
+      "reference": "DEP-CASH-001",
+      "description": "إيداع نقدي في الفرع الرئيسي - دبي",
+      "fees": 10.0,
+      "paymentDetails": {
+        "branchName": "الفرع الرئيسي - دبي",
+        "receiptNumber": "CD-12345"
+      }
+    },
+    {
+      "id": "dw-007",
+      "userId": "user-123",
+      "type": "deposit",
+      "amount": 2500.0,
+      "currency": "ريال يمني",
+      "status": "failed",
+      "paymentMethod": "بطاقة ائتمان",
+      "paymentMethodId": "credit_card",
+      "date": "2025-05-20T18:30:00Z",
+      "reference": "DEP-CC-002",
+      "description": "إيداع عن طريق بطاقة الائتمان",
+      "fees": 0.0,
+      "failureReason": "تم رفض البطاقة من قبل البنك المصدر",
+      "paymentDetails": {
+        "cardNumber": "XXXX-XXXX-XXXX-9012",
+        "cardHolderName": "محمد أحمد"
+      }
+    },
+    {
+      "id": "dw-008",
+      "userId": "user-123",
+      "type": "withdraw",
+      "amount": 500.0,
+      "currency": "ريال يمني",
+      "status": "cancelled",
+      "paymentMethod": "تحويل بنكي",
+      "paymentMethodId": "bank_transfer",
+      "date": "2025-05-16T10:15:00Z",
+      "cancelledDate": "2025-05-16T10:45:00Z",
+      "reference": "WDR-BT-003",
+      "description": "سحب عن طريق التحويل البنكي",
+      "fees": 0.0,
+      "cancellationReason": "تم إلغاء العملية من قبل المستخدم",
+      "paymentDetails": {
+        "accountNumber": "XXXX-XXXX-XXXX-1234",
+        "accountName": "محمد أحمد",
+        "bankName": "بنك الإمارات الوطني"
+      }
+    }
+  ],
+  "summary": {
+    "totalDeposits": 21500.0,
+    "totalWithdrawals": 4000.0,
+    "pendingDeposits": 1000.0,
+    "pendingWithdrawals": 1500.0,
+    "totalFees": 55.0,
+    "netBalance": 17500.0
+  }
+}

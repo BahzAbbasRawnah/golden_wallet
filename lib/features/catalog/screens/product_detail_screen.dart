@@ -15,7 +15,7 @@ import 'package:golden_wallet/shared/widgets/loading_indicator.dart';
 /// Product detail screen
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
-  
+
   const ProductDetailScreen({
     Key? key,
     required this.productId,
@@ -29,24 +29,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Product? _product;
   bool _isLoading = true;
   String? _error;
-  
+
   @override
   void initState() {
     super.initState();
     _loadProduct();
   }
-  
+
   /// Load product details
   Future<void> _loadProduct() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
-    
+
     try {
-      final catalogProvider = Provider.of<CatalogProvider>(context, listen: false);
+      final catalogProvider =
+          Provider.of<CatalogProvider>(context, listen: false);
       final product = await catalogProvider.getProductById(widget.productId);
-      
+
       setState(() {
         _product = product;
         _isLoading = false;
@@ -58,7 +59,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,12 +110,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: Text('productNotFound'.tr()),
                     )
                   : _buildProductDetail(context, _product!),
-      bottomNavigationBar: _product != null
-          ? _buildBottomBar(context, _product!)
-          : null,
+      bottomNavigationBar:
+          _product != null ? _buildBottomBar(context, _product!) : null,
     );
   }
-  
+
   /// Build product detail content
   Widget _buildProductDetail(BuildContext context, Product product) {
     return SingleChildScrollView(
@@ -123,7 +123,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           // Image gallery
           ImageGallery(images: product.images),
-          
+
           // Product info
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -134,41 +134,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 Text(
                   product.name,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Category
                 Text(
                   product.category.name,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                        color: Colors.grey[600],
+                      ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Price
                 Row(
                   children: [
                     if (product.hasDiscount) ...[
                       Text(
                         '\$${product.price.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          decoration: TextDecoration.lineThrough,
-                          color: Colors.grey[600],
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: Colors.grey[600],
+                                ),
                       ),
                       const SizedBox(width: 8),
                     ],
                     Text(
                       '\$${product.discountedPrice.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.goldDark,
-                      ),
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.goldDark,
+                          ),
                     ),
                     if (product.hasDiscount) ...[
                       const SizedBox(width: 8),
@@ -183,28 +184,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                         child: Text(
                           '${product.discountPercentage!.toStringAsFixed(0)}% OFF',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.red[800],
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.red[800],
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                     ],
                   ],
                 ),
-                
+
                 if (product.makingCharges != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     '${'makingCharges'.tr()}: \$${product.makingCharges!.toStringAsFixed(2)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Availability
                 Row(
                   children: [
@@ -223,30 +225,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Description
                 Text(
                   'description'.tr(),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   product.description,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Specifications
                 Text(
                   'productSpecifications'.tr(),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 ...product.specifications.entries.map((entry) {
@@ -254,10 +256,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     label: entry.key,
                     value: entry.value,
                   );
-                }).toList(),
-                
+                }),
+
                 const SizedBox(height: 24),
-                
+
                 // Similar products
                 _buildSimilarProducts(context, product),
               ],
@@ -267,29 +269,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-  
+
   /// Build similar products section
   Widget _buildSimilarProducts(BuildContext context, Product product) {
     return Consumer<CatalogProvider>(
       builder: (context, provider, child) {
         final similarProducts = provider.getSimilarProducts(product);
-        
+
         if (similarProducts.isEmpty) {
           return const SizedBox.shrink();
         }
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'similarProducts'.tr(),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 220,
+              height: 280, // Increased height to accommodate the product cards
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: similarProducts.length,
@@ -299,18 +301,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     width: 160,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 16),
-                      child: ProductCard(
-                        product: similarProduct,
-                        isFavorite: provider.isFavorite(similarProduct.id),
-                        onFavoriteToggle: () => provider.toggleFavorite(similarProduct.id),
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            AppRoutes.productDetail,
-                            arguments: similarProduct.id,
-                          );
-                        },
-                        showCategory: false,
+                      child: AspectRatio(
+                        aspectRatio: 0.5, // Match the grid view aspect ratio
+                        child: ProductCard(
+                          product: similarProduct,
+                          isFavorite: provider.isFavorite(similarProduct.id),
+                          onFavoriteToggle: () =>
+                              provider.toggleFavorite(similarProduct.id),
+                          onTap: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.productDetail,
+                              arguments: similarProduct.id,
+                            );
+                          },
+                          showCategory: false,
+                        ),
                       ),
                     ),
                   );
@@ -322,7 +328,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       },
     );
   }
-  
+
   /// Build bottom bar with action buttons
   Widget _buildBottomBar(BuildContext context, Product product) {
     return Container(
@@ -331,7 +337,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

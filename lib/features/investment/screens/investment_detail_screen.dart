@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
-import 'package:golden_wallet/features/investment/models/user_investment_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
+import 'package:golden_wallet/features/investment/models/investment_model.dart';
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 import 'package:golden_wallet/shared/widgets/custom_card.dart';
@@ -13,9 +14,9 @@ class InvestmentDetailScreen extends StatefulWidget {
   final String investmentId;
 
   const InvestmentDetailScreen({
-    Key? key,
+    super.key,
     required this.investmentId,
-  }) : super(key: key);
+  });
 
   @override
   State<InvestmentDetailScreen> createState() => _InvestmentDetailScreenState();
@@ -50,6 +51,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     });
 
     if (mounted) {
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -63,14 +65,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
   }
 
   /// Withdraw funds from the investment
-  Future<void> _withdrawFunds() async {
-    final investmentProvider =
-        Provider.of<InvestmentProvider>(context, listen: false);
-    final investment =
-        investmentProvider.getUserInvestmentById(widget.investmentId);
-
-    if (investment == null) return;
-
+  Future<void> _withdrawFunds(Investment investment) async {
     // Show dialog to enter amount
     final amount = await showDialog<double>(
       context: context,
@@ -85,6 +80,8 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
       _isLoading = true;
     });
 
+    final investmentProvider =
+        Provider.of<InvestmentProvider>(context, listen: false);
     final success = await investmentProvider.withdrawFunds(
       investmentId: widget.investmentId,
       amount: amount,
@@ -177,143 +174,179 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final investmentProvider = Provider.of<InvestmentProvider>(context);
-    final investment =
-        investmentProvider.getUserInvestmentById(widget.investmentId);
-    final plan = investment != null
-        ? investmentProvider.getInvestmentPlanById(investment.planId)
-        : null;
-    final isRtl = Directionality.of(context) == TextDirection.RTL;
 
-    if (investment == null || plan == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-              color: AppTheme.goldDark,
+    return FutureBuilder<Investment?>(
+      future: investmentProvider.getUserInvestmentById(widget.investmentId),
+      builder: (context, investmentSnapshot) {
+        if (investmentSnapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: CustomAppBar(
+              title: 'investment'.tr(),
+              showBackButton: true,
             ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: Center(
-          child: Text('investmentNotFound'.tr()),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          plan.name,
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: _isLoading
-          ? const Center(
+            body: const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldDark),
               ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Investment summary
-                  _buildInvestmentSummary(context, investment, plan),
-                  const SizedBox(height: 24),
+            ),
+          );
+        }
 
-                  // Investment details
-                  _buildInvestmentDetails(context, investment, plan),
-                  const SizedBox(height: 24),
+        final investment = investmentSnapshot.data;
 
-                  // Transaction history
-                  _buildTransactionHistory(context, investment),
-                  const SizedBox(height: 24),
+        if (investment == null) {
+          return Scaffold(
+            appBar: CustomAppBar(
+              title: 'investmentNotFound'.tr(),
+              showBackButton: true,
+            ),
+            body: Center(
+              child: Text('investmentNotFound'.tr()),
+            ),
+          );
+        }
 
-                  // Action buttons
-                  if (investment.status == InvestmentStatus.active) ...[
-                    Row(
-                      children: [
-                        // Add funds button
-                        Expanded(
-                          child: CustomButton(
-                            text: 'addFunds'.tr(),
-                            onPressed: _addFunds,
-                            icon: Icons.add,
-                            type: ButtonType.secondary,
-                            textColor: AppTheme.goldDark,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
+        return FutureBuilder<InvestmentPlan?>(
+          future: investmentProvider.getInvestmentPlanById(investment.planId),
+          builder: (context, planSnapshot) {
+            if (planSnapshot.connectionState == ConnectionState.waiting) {
+              return Scaffold(
+                appBar: CustomAppBar(
+                  title: 'investment'.tr(),
+                  showBackButton: true,
+                ),
+                body: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppTheme.goldDark),
+                  ),
+                ),
+              );
+            }
 
-                        // Withdraw funds button
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.goldGradient,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryColor.withAlpha(70),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+            final plan = planSnapshot.data;
+
+            if (plan == null) {
+              return Scaffold(
+                appBar: CustomAppBar(
+                  title: 'investmentNotFound'.tr(),
+                  showBackButton: true,
+                ),
+                body: Center(
+                  child: Text('investmentPlanNotFound'.tr()),
+                ),
+              );
+            }
+
+            return Scaffold(
+              appBar: CustomAppBar(
+                title: plan.name,
+                showBackButton: true,
+              ),
+              body: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppTheme.goldDark),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Investment summary
+                          _buildInvestmentSummary(context, investment, plan),
+                          const SizedBox(height: 24),
+
+                          // Investment details
+                          _buildInvestmentDetails(context, investment, plan),
+                          const SizedBox(height: 24),
+
+                          // Transaction history
+                          _buildTransactionHistory(context, investment),
+                          const SizedBox(height: 24),
+
+                          // Action buttons
+                          if (investment.status == InvestmentStatus.active) ...[
+                            Row(
+                              children: [
+                                // Add funds button
+                                Expanded(
+                                  child: CustomButton(
+                                    text: 'addFunds'.tr(),
+                                    onPressed: _addFunds,
+                                    icon: Icons.add,
+                                    type: ButtonType.secondary,
+                                    textColor: AppTheme.goldDark,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+
+                                // Withdraw funds button
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: AppTheme.goldGradient,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppTheme.primaryColor
+                                              .withAlpha(70),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CustomButton(
+                                      text: 'withdraw'.tr(),
+                                      onPressed: () =>
+                                          _withdrawFunds(investment),
+                                      icon: Icons.arrow_downward,
+                                      type: ButtonType.primary,
+                                      backgroundColor: Colors.transparent,
+                                      textColor: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                            child: CustomButton(
-                              text: 'withdraw'.tr(),
-                              onPressed: _withdrawFunds,
-                              icon: Icons.arrow_downward,
-                              type: ButtonType.primary,
-                              backgroundColor: Colors.transparent,
-                              textColor: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                    // Cancel investment button
-                    CustomButton(
-                      text: 'cancelInvestment'.tr(),
-                      onPressed: _cancelInvestment,
-                      icon: Icons.cancel,
-                      type: ButtonType.text,
-                      textColor: AppTheme.errorColor,
-                      isFullWidth: true,
+                            // Cancel investment button
+                            CustomButton(
+                              text: 'cancelInvestment'.tr(),
+                              onPressed: _cancelInvestment,
+                              icon: Icons.cancel,
+                              type: ButtonType.text,
+                              textColor: AppTheme.errorColor,
+                              isFullWidth: true,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ],
-                ],
-              ),
-            ),
+            );
+          },
+        );
+      },
     );
   }
 
   /// Build investment summary
   Widget _buildInvestmentSummary(
     BuildContext context,
-    UserInvestmentModel investment,
-    InvestmentPlanModel plan,
+    Investment investment,
+    InvestmentPlan plan,
   ) {
+    final theme = Theme.of(context);
     final isActive = investment.status == InvestmentStatus.active;
+    final returnRate = investment.returnRate;
+    final profitAmount = investment.currentValue - investment.initialInvestment;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return GoldCard(
+    return CustomCard(
+      gradient: AppTheme.investmentGradient,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -325,15 +358,16 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: isDark
+                      ? const Color(0x33FFFFFF) // White with 20% opacity
+                      : const Color(0x1A000000), // Black with 10% opacity
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   investment.status.translationKey.tr(),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: isDark ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
                   ),
                 ),
               ),
@@ -344,16 +378,17 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: isDark
+                        ? const Color(0x33FFFFFF) // White with 20% opacity
+                        : const Color(0x1A000000), // Black with 10% opacity
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'daysRemaining'
-                        .tr(args: [investment.remainingDays.toString()]),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    'daysRemaining'.tr(
+                        args: [_calculateRemainingDays(investment).toString()]),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: isDark ? Colors.white : Colors.black,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -363,18 +398,19 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
 
           // Current value
           Text(
-            '\$${investment.currentValue.toStringAsFixed(2)}',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+            '${investment.currency} ${investment.currentValue.toStringAsFixed(2)}',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'currentValue'.tr(),
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isDark
+                  ? const Color(0xCCFFFFFF) // White with 80% opacity
+                  : const Color(0xCC000000), // Black with 80% opacity
             ),
           ),
           const SizedBox(height: 16),
@@ -387,17 +423,17 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
               children: [
                 Text(
                   'progress'.tr(),
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark
+                        ? const Color(0xCCFFFFFF) // White with 80% opacity
+                        : const Color(0xCC000000), // Black with 80% opacity
                   ),
                 ),
                 Text(
-                  '${investment.progressPercentage.toStringAsFixed(1)}%',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  '${_calculateProgressPercentage(investment).toStringAsFixed(1)}%',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
                   ),
                 ),
               ],
@@ -408,9 +444,12 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: investment.progressPercentage / 100,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                value: _calculateProgressValue(investment),
+                backgroundColor: isDark
+                    ? const Color(0x33FFFFFF) // White with 20% opacity
+                    : const Color(0x1A000000), // Black with 10% opacity
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    isDark ? Colors.white : AppTheme.goldDark),
                 minHeight: 8,
               ),
             ),
@@ -427,18 +466,18 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                   children: [
                     Text(
                       'initialInvestment'.tr(),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? const Color(0xCCFFFFFF) // White with 80% opacity
+                            : const Color(0xCC000000), // Black with 80% opacity
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${investment.amount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      '${investment.currency} ${investment.initialInvestment.toStringAsFixed(2)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: isDark ? Colors.white : Colors.black,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
                   ],
@@ -452,32 +491,32 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                   children: [
                     Text(
                       'returnPercentage'.tr(),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? const Color(0xCCFFFFFF) // White with 80% opacity
+                            : const Color(0xCC000000), // Black with 80% opacity
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(
-                          investment.returnPercentage >= 0
+                          returnRate >= 0
                               ? Icons.arrow_upward
                               : Icons.arrow_downward,
-                          color: investment.returnPercentage >= 0
-                              ? Colors.green
-                              : Colors.red,
+                          color: returnRate >= 0
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor,
                           size: 16,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${investment.returnPercentage >= 0 ? '+' : ''}${investment.returnPercentage.toStringAsFixed(2)}%',
-                          style: TextStyle(
-                            color: investment.returnPercentage >= 0
-                                ? Colors.green
-                                : Colors.red,
+                          '${returnRate >= 0 ? '+' : ''}${returnRate.toStringAsFixed(2)}%',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: returnRate >= 0
+                                ? AppTheme.successColor
+                                : AppTheme.errorColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
                           ),
                         ),
                       ],
@@ -493,20 +532,20 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                   children: [
                     Text(
                       'profit'.tr(),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? const Color(0xCCFFFFFF) // White with 80% opacity
+                            : const Color(0xCC000000), // Black with 80% opacity
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${investment.profitAmount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: investment.profitAmount >= 0
-                            ? Colors.green
-                            : Colors.red,
+                      '${investment.currency} ${profitAmount.toStringAsFixed(2)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: profitAmount >= 0
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
                   ],
@@ -522,269 +561,294 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
   /// Build investment details
   Widget _buildInvestmentDetails(
     BuildContext context,
-    UserInvestmentModel investment,
-    InvestmentPlanModel plan,
+    Investment investment,
+    InvestmentPlan plan,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'investmentDetails'.tr(),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.goldDark,
-              ),
-        ),
-        const SizedBox(height: 12),
-        CustomCard(
-          child: Column(
-            children: [
-              // Plan name
-              _buildDetailRow(
-                context: context,
-                title: 'plan'.tr(),
-                value: plan.name,
-              ),
-              const Divider(),
-
-              // Plan type
-              _buildDetailRow(
-                context: context,
-                title: 'planType'.tr(),
-                value: plan.type.translationKey.tr(),
-              ),
-              const Divider(),
-
-              // Risk level
-              _buildDetailRow(
-                context: context,
-                title: 'riskLevel'.tr(),
-                value: plan.riskLevel.translationKey.tr(),
-                valueColor: plan.riskLevel.color,
-              ),
-              const Divider(),
-
-              // Start date
-              _buildDetailRow(
-                context: context,
-                title: 'startDate'.tr(),
-                value: DateFormat('MMM dd, yyyy').format(investment.startDate),
-              ),
-              const Divider(),
-
-              // End date
-              _buildDetailRow(
-                context: context,
-                title: 'endDate'.tr(),
-                value: investment.endDate != null
-                    ? DateFormat('MMM dd, yyyy').format(investment.endDate!)
-                    : DateFormat('MMM dd, yyyy').format(
-                        investment.startDate.add(
-                            Duration(days: investment.durationMonths * 30)),
-                      ),
-              ),
-              const Divider(),
-
-              // Duration
-              _buildDetailRow(
-                context: context,
-                title: 'duration'.tr(),
-                value: investment.durationMonths < 12
-                    ? '${investment.durationMonths} ${'months'.tr()}'
-                    : '${investment.durationMonths ~/ 12} ${investment.durationMonths == 12 ? 'year'.tr() : 'years'.tr()}',
-              ),
-
-              // Recurring investment details (if applicable)
-              if (investment.isRecurring &&
-                  investment.recurringDetails != null) ...[
-                const Divider(),
-                _buildDetailRow(
-                  context: context,
-                  title: 'recurringInvestment'.tr(),
-                  value:
-                      '${investment.recurringDetails!.frequency.tr()} - \$${investment.recurringDetails!.amount.toStringAsFixed(2)}',
-                ),
-                const Divider(),
-                _buildDetailRow(
-                  context: context,
-                  title: 'nextInvestmentDate'.tr(),
-                  value: DateFormat('MMM dd, yyyy')
-                      .format(investment.recurringDetails!.nextInvestmentDate),
-                ),
-              ],
-            ],
+    return CustomCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'investmentDetails'.tr(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+
+          // Plan details
+          _buildDetailRow(
+            context,
+            'planName'.tr(),
+            plan.name,
+          ),
+          _buildDetailRow(
+            context,
+            'planType'.tr(),
+            plan.paymentFrequency.translationKey.tr(),
+          ),
+          _buildDetailRow(
+            context,
+            'riskLevel'.tr(),
+            plan.riskLevel.translationKey.tr(),
+          ),
+          _buildDetailRow(
+            context,
+            'expectedReturn'.tr(),
+            '${plan.expectedReturns.min}% - ${plan.expectedReturns.max}%',
+          ),
+
+          // Investment details
+          _buildDetailRow(
+            context,
+            'startDate'.tr(),
+            _formatDate(investment.startDate),
+          ),
+          _buildDetailRow(
+            context,
+            'endDate'.tr(),
+            _formatDate(investment.endDate),
+          ),
+          _buildDetailRow(
+            context,
+            'duration'.tr(),
+            'months'
+                .tr(args: [_calculateDurationMonths(investment).toString()]),
+          ),
+          _buildDetailRow(
+            context,
+            'paymentFrequency'.tr(),
+            plan.paymentFrequency.translationKey.tr(),
+          ),
+        ],
+      ),
     );
   }
 
   /// Build transaction history
   Widget _buildTransactionHistory(
     BuildContext context,
-    UserInvestmentModel investment,
+    Investment investment,
   ) {
-    // Sort transactions by date (newest first)
-    final transactions =
-        List<InvestmentTransaction>.from(investment.transactions)
-          ..sort((a, b) => b.date.compareTo(a.date));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'transactionHistory'.tr(),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.goldDark,
-              ),
-        ),
-        const SizedBox(height: 12),
-        CustomCard(
-          child: Column(
-            children: [
-              // Table header
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'date'.tr(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[300]
-                              : Colors.grey[700],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'type'.tr(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[300]
-                              : Colors.grey[700],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        'amount'.tr(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[300]
-                              : Colors.grey[700],
-                        ),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-
-              // Transaction rows
-              ...transactions.map((transaction) {
-                final isPositive = transaction.type == 'deposit' ||
-                    transaction.type == 'interest';
-
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      // Date
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(transaction.date),
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey[300]
-                                    : Colors.grey[700],
-                          ),
-                        ),
-                      ),
-
-                      // Type
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          'transactionType${transaction.type.capitalize()}'
-                              .tr(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-
-                      // Amount
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          '${isPositive ? '+' : ''}${transaction.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isPositive
-                                ? AppTheme.successColor
-                                : AppTheme.errorColor,
-                          ),
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ],
+    return CustomCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'transactionHistory'.tr(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+
+          // Initial investment transaction
+          _buildTransactionItem(
+            context,
+            'initialInvestment'.tr(),
+            investment.startDate,
+            investment.initialInvestment,
+            TransactionType.deposit,
+          ),
+
+          // Sample transactions (in a real app, these would come from the API)
+          if (investment.status == InvestmentStatus.active) ...[
+            _buildTransactionItem(
+              context,
+              'interestPayment'.tr(),
+              DateTime.now().subtract(const Duration(days: 30)),
+              investment.initialInvestment * 0.05,
+              TransactionType.interest,
+            ),
+            _buildTransactionItem(
+              context,
+              'additionalDeposit'.tr(),
+              DateTime.now().subtract(const Duration(days: 15)),
+              500,
+              TransactionType.deposit,
+            ),
+          ],
+
+          // Completed investment transaction
+          if (investment.status == InvestmentStatus.completed)
+            _buildTransactionItem(
+              context,
+              'investmentMatured'.tr(),
+              investment.endDate,
+              investment.currentValue,
+              TransactionType.withdrawal,
+            ),
+
+          // Cancelled investment transaction
+          if (investment.status == InvestmentStatus.cancelled)
+            _buildTransactionItem(
+              context,
+              'investmentCancelled'.tr(),
+              DateTime.now().subtract(const Duration(days: 7)),
+              investment.currentValue,
+              TransactionType.withdrawal,
+            ),
+        ],
+      ),
     );
   }
 
-  /// Build detail row
-  Widget _buildDetailRow({
-    required BuildContext context,
-    required String title,
-    required String value,
-    Color? valueColor,
-  }) {
+  /// Build a detail row
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            title,
+            label,
             style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[300]
-                  : Colors.grey[600],
+              color: Colors.white.withAlpha(204),
+              fontSize: 14,
             ),
           ),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
+              color: Colors.white,
               fontWeight: FontWeight.bold,
-              color: valueColor,
+              fontSize: 14,
             ),
           ),
         ],
       ),
     );
   }
+
+  /// Build a transaction item
+  Widget _buildTransactionItem(
+    BuildContext context,
+    String description,
+    DateTime date,
+    double amount,
+    TransactionType type,
+  ) {
+    final isPositive =
+        type == TransactionType.interest || type == TransactionType.deposit;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          // Transaction icon
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isPositive
+                  ? Colors.green.withAlpha(51)
+                  : Colors.red.withAlpha(51),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              type == TransactionType.interest
+                  ? Icons.attach_money
+                  : type == TransactionType.deposit
+                      ? Icons.arrow_upward
+                      : Icons.arrow_downward,
+              color: isPositive ? Colors.green : Colors.red,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Transaction details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  _formatDate(date),
+                  style: TextStyle(
+                    color: Colors.white.withAlpha(153),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Transaction amount
+          Text(
+            '${isPositive ? '+' : '-'} \$${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              color: isPositive ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Calculate remaining days
+  int _calculateRemainingDays(Investment investment) {
+    final now = DateTime.now();
+    final difference = investment.endDate.difference(now);
+    return difference.inDays < 0 ? 0 : difference.inDays;
+  }
+
+  /// Calculate progress percentage
+  double _calculateProgressPercentage(Investment investment) {
+    final totalDays =
+        investment.endDate.difference(investment.startDate).inDays;
+    final elapsedDays = DateTime.now().difference(investment.startDate).inDays;
+
+    if (elapsedDays <= 0) return 0;
+    if (elapsedDays >= totalDays) return 100;
+
+    return (elapsedDays / totalDays) * 100;
+  }
+
+  /// Calculate progress value (0.0 to 1.0)
+  double _calculateProgressValue(Investment investment) {
+    return _calculateProgressPercentage(investment) / 100;
+  }
+
+  /// Format date
+  String _formatDate(DateTime date) {
+    return DateFormat.yMMMd().format(date);
+  }
+
+  /// Calculate duration in months
+  int _calculateDurationMonths(Investment investment) {
+    final months = (investment.endDate.year - investment.startDate.year) * 12 +
+        investment.endDate.month -
+        investment.startDate.month;
+    return months <= 0 ? 1 : months;
+  }
 }
 
-/// Dialog for adding funds
+/// Transaction type enum
+enum TransactionType {
+  deposit,
+  withdrawal,
+  interest,
+}
+
+/// Add funds dialog
 class _AddFundsDialog extends StatefulWidget {
   @override
   State<_AddFundsDialog> createState() => _AddFundsDialogState();
@@ -806,33 +870,24 @@ class _AddFundsDialogState extends State<_AddFundsDialog> {
       title: Text('addFunds'.tr()),
       content: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _amountController,
-              decoration: InputDecoration(
-                labelText: 'amount'.tr(),
-                prefixIcon: const Icon(Icons.attach_money),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'amountRequired'.tr();
-                }
-
-                final amount = double.tryParse(value);
-                if (amount == null || amount <= 0) {
-                  return 'invalidAmount'.tr();
-                }
-
-                return null;
-              },
-            ),
-          ],
+        child: TextFormField(
+          controller: _amountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'amount'.tr(),
+            prefixText: '\$ ',
+            border: const OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'pleaseEnterAmount'.tr();
+            }
+            final amount = double.tryParse(value);
+            if (amount == null || amount <= 0) {
+              return 'pleaseEnterValidAmount'.tr();
+            }
+            return null;
+          },
         ),
       ),
       actions: [
@@ -847,8 +902,8 @@ class _AddFundsDialogState extends State<_AddFundsDialog> {
         ),
         TextButton(
           onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              final amount = double.tryParse(_amountController.text) ?? 0;
+            if (_formKey.currentState!.validate()) {
+              final amount = double.parse(_amountController.text);
               Navigator.pop(context, amount);
             }
           },
@@ -856,7 +911,6 @@ class _AddFundsDialogState extends State<_AddFundsDialog> {
             'add'.tr(),
             style: TextStyle(
               color: AppTheme.goldDark,
-              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -865,7 +919,7 @@ class _AddFundsDialogState extends State<_AddFundsDialog> {
   }
 }
 
-/// Dialog for withdrawing funds
+/// Withdraw funds dialog
 class _WithdrawFundsDialog extends StatefulWidget {
   final double maxAmount;
 
@@ -895,33 +949,36 @@ class _WithdrawFundsDialogState extends State<_WithdrawFundsDialog> {
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'availableBalance'
+                  .tr(args: ['\$${widget.maxAmount.toStringAsFixed(2)}']),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
+              keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'amount'.tr(),
-                prefixIcon: const Icon(Icons.attach_money),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                helperText: 'maxWithdrawal'
-                    .tr(args: [widget.maxAmount.toStringAsFixed(2)]),
+                prefixText: '\$ ',
+                border: const OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'amountRequired'.tr();
+                  return 'pleaseEnterAmount'.tr();
                 }
-
                 final amount = double.tryParse(value);
                 if (amount == null || amount <= 0) {
-                  return 'invalidAmount'.tr();
+                  return 'pleaseEnterValidAmount'.tr();
                 }
-
                 if (amount > widget.maxAmount) {
-                  return 'amountExceedsBalance'.tr();
+                  return 'insufficientBalance'.tr();
                 }
-
                 return null;
               },
             ),
@@ -940,8 +997,8 @@ class _WithdrawFundsDialogState extends State<_WithdrawFundsDialog> {
         ),
         TextButton(
           onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              final amount = double.tryParse(_amountController.text) ?? 0;
+            if (_formKey.currentState!.validate()) {
+              final amount = double.parse(_amountController.text);
               Navigator.pop(context, amount);
             }
           },
@@ -949,18 +1006,10 @@ class _WithdrawFundsDialogState extends State<_WithdrawFundsDialog> {
             'withdraw'.tr(),
             style: TextStyle(
               color: AppTheme.goldDark,
-              fontWeight: FontWeight.bold,
             ),
           ),
         ),
       ],
     );
-  }
-}
-
-/// Extension to capitalize the first letter of a string
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

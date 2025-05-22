@@ -1,0 +1,179 @@
+{
+  "paymentMethods": [
+    {
+      "id": "bank_transfer",
+      "name": "تحويل بنكي",
+      "description": "تحويل الأموال مباشرة من حسابك البنكي",
+      "icon": "account_balance",
+      "isActive": true,
+      "processingTime": "1-3 أيام عمل",
+      "fees": {
+        "percentage": 0.0,
+        "fixed": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "limits": {
+        "min": 100.0,
+        "max": 100000.0
+      },
+      "supportedCurrencies": ["AED", "USD", "EUR", "GBP"],
+      "requiredFields": [
+        {
+          "name": "accountNumber",
+          "label": "رقم الحساب",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "accountName",
+          "label": "اسم صاحب الحساب",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "bankName",
+          "label": "اسم البنك",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "swiftCode",
+          "label": "رمز السويفت",
+          "type": "text",
+          "required": false
+        }
+      ],
+      "instructions": [
+        "قم بإدخال تفاصيل حسابك البنكي",
+        "سيتم إرسال تفاصيل التحويل إلى بريدك الإلكتروني",
+        "قم بإجراء التحويل من حسابك البنكي",
+        "سيتم إضافة المبلغ إلى محفظتك بعد التحقق من التحويل"
+      ]
+    },
+    {
+      "id": "credit_card",
+      "name": "بطاقة ائتمان",
+      "description": "الدفع باستخدام بطاقة الائتمان أو الخصم",
+      "icon": "credit_card",
+      "isActive": true,
+      "processingTime": "فوري",
+      "fees": {
+        "percentage": 1.5,
+        "fixed": 0.0,
+        "min": 5.0,
+        "max": 100.0
+      },
+      "limits": {
+        "min": 50.0,
+        "max": 50000.0
+      },
+      "supportedCurrencies": ["AED", "USD", "EUR", "GBP"],
+      "requiredFields": [
+        {
+          "name": "cardNumber",
+          "label": "رقم البطاقة",
+          "type": "card_number",
+          "required": true
+        },
+        {
+          "name": "cardHolderName",
+          "label": "اسم حامل البطاقة",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "expiryDate",
+          "label": "تاريخ الانتهاء",
+          "type": "expiry_date",
+          "required": true
+        },
+        {
+          "name": "cvv",
+          "label": "رمز التحقق",
+          "type": "cvv",
+          "required": true
+        }
+      ],
+      "instructions": [
+        "أدخل تفاصيل بطاقتك",
+        "سيتم خصم المبلغ من بطاقتك على الفور",
+        "سيتم إضافة المبلغ إلى محفظتك بعد التحقق من المعاملة"
+      ]
+    },
+    {
+      "id": "crypto",
+      "name": "عملات رقمية",
+      "description": "الدفع باستخدام العملات الرقمية مثل البيتكوين والإيثريوم",
+      "icon": "currency_bitcoin",
+      "isActive": true,
+      "processingTime": "10-60 دقيقة",
+      "fees": {
+        "percentage": 0.5,
+        "fixed": 0.0,
+        "min": 1.0,
+        "max": 50.0
+      },
+      "limits": {
+        "min": 100.0,
+        "max": 1000000.0
+      },
+      "supportedCurrencies": ["BTC", "ETH", "USDT", "BNB"],
+      "requiredFields": [
+        {
+          "name": "cryptoType",
+          "label": "نوع العملة الرقمية",
+          "type": "select",
+          "options": ["BTC", "ETH", "USDT", "BNB"],
+          "required": true
+        }
+      ],
+      "instructions": [
+        "اختر نوع العملة الرقمية",
+        "سيتم عرض عنوان المحفظة لإرسال العملات الرقمية إليه",
+        "قم بإرسال العملات الرقمية إلى العنوان المعروض",
+        "سيتم إضافة المبلغ المكافئ إلى محفظتك بعد تأكيد المعاملة على الشبكة"
+      ]
+    },
+    {
+      "id": "cash_deposit",
+      "name": "إيداع نقدي",
+      "description": "إيداع نقدي في أحد فروعنا",
+      "icon": "payments",
+      "isActive": true,
+      "processingTime": "فوري",
+      "fees": {
+        "percentage": 0.0,
+        "fixed": 10.0,
+        "min": 10.0,
+        "max": 10.0
+      },
+      "limits": {
+        "min": 100.0,
+        "max": 50000.0
+      },
+      "supportedCurrencies": ["AED"],
+      "requiredFields": [],
+      "instructions": [
+        "قم بزيارة أقرب فرع لنا",
+        "قدم بطاقة الهوية الخاصة بك",
+        "قم بإيداع المبلغ النقدي",
+        "سيتم إضافة المبلغ إلى محفظتك على الفور"
+      ],
+      "branches": [
+        {
+          "name": "الفرع الرئيسي - دبي",
+          "address": "برج خليفة، وسط مدينة دبي، الإمارات العربية المتحدة",
+          "workingHours": "9:00 صباحًا - 5:00 مساءً، من الأحد إلى الخميس",
+          "phone": "+971 4 123 4567"
+        },
+        {
+          "name": "فرع أبوظبي",
+          "address": "شارع الكورنيش، أبوظبي، الإمارات العربية المتحدة",
+          "workingHours": "9:00 صباحًا - 5:00 مساءً، من الأحد إلى الخميس",
+          "phone": "+971 2 123 4567"
+        }
+      ]
+    }
+  ]
+}

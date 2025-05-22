@@ -1,0 +1,162 @@
+{
+  "goldCategories": [
+    {
+      "id": "grams",
+      "name": "جرام ذهب",
+      "icon": "scale",
+      "description": "ذهب نقي يقاس بالجرام"
+    },
+    {
+      "id": "pounds",
+      "name": "جنيه ذهب",
+      "icon": "monetization_on",
+      "description": "جنيهات ذهبية بأوزان مختلفة"
+    },
+    {
+      "id": "bars",
+      "name": "سبيكة ذهب",
+      "icon": "view_module",
+      "description": "سبائك ذهبية قياسية"
+    }
+  ],
+  "goldKarats": [
+    {
+      "id":"1",
+      "karat": "24K",
+      "name": "عيار 24",
+      "description": "ذهب نقي (نقاء 99.9٪)"
+    },
+    {
+      "id":"2",
+      "karat": "21K",
+      "name": "عيار 21",
+      "description": "ذهب بنقاء 87.5٪، يستخدم عادة في المجوهرات"
+    },
+    {
+      "id":"3",
+      "karat": "20K",
+      "name": "عيار 20",
+      "description": "ذهب بنقاء 83.3٪"
+    },
+    {
+      "id":"4",
+      "karat": "18K",
+      "name": "عيار 18",
+      "description": "ذهب بنقاء 75٪، شائع في المجوهرات"
+    },
+    {
+      "id":"5",
+      "karat": "22K",
+      "name": "عيار 22",
+      "description": "ذهب بنقاء 91.7٪، يستخدم في العملات والمجوهرات الفاخرة"
+    }
+  ],
+  "goldPoundWeights": [
+    {
+      "id": "pound_1g",
+      "name": "جنيه ذهب 1 جرام",
+      "grams": 1.0,
+      "description": "جنيه ذهبي صغير (1 جرام)"
+    },
+    {
+      "id": "pound_2g",
+      "name": "جنيه ذهب 2 جرام",
+      "grams": 2.0,
+      "description": "جنيه ذهبي صغير (2 جرام)"
+    },
+    {
+      "id": "pound_4g",
+      "name": "جنيه ذهب 4 جرام",
+      "grams": 4.0,
+      "description": "جنيه ذهبي متوسط (4 جرام)"
+    },
+    {
+      "id": "pound_8g",
+      "name": "جنيه ذهب 8 جرام",
+      "grams": 8.0,
+      "description": "جنيه ذهبي كبير (8 جرام)"
+    },
+    {
+      "id": "pound_quarter",
+      "name": "ربع جنيه ذهب",
+      "grams": 2.0,
+      "description": "ربع جنيه ذهبي (2 جرام)"
+    },
+    {
+      "id": "pound_half",
+      "name": "نصف جنيه ذهب",
+      "grams": 4.0,
+      "description": "نصف جنيه ذهبي (4 جرام)"
+    }
+  ],
+  "goldBars": [
+    {
+      "id": "bar_1oz",
+      "name": "سبيكة ذهب 1 أونصة",
+      "grams": 31.1,
+      "description": "سبيكة ذهبية قياسية 1 أونصة تروي"
+    },
+    {
+      "id": "bar_5oz",
+      "name": "سبيكة ذهب 5 أونصة",
+      "grams": 155.5,
+      "description": "سبيكة ذهبية 5 أونصة تروي"
+    },
+    {
+      "id": "bar_10oz",
+      "name": "سبيكة ذهب 10 أونصة",
+      "grams": 311.0,
+      "description": "سبيكة ذهبية 10 أونصة تروي"
+    },
+    {
+      "id": "bar_1kg",
+      "name": "سبيكة ذهب 1 كيلوجرام",
+      "grams": 1000.0,
+      "description": "سبيكة ذهبية 1 كيلوجرام"
+    },
+    {
+      "id": "bar_100g",
+      "name": "سبيكة ذهب 100 جرام",
+      "grams": 100.0,
+      "description": "سبيكة ذهبية 100 جرام"
+    },
+    {
+      "id": "bar_50g",
+      "name": "سبيكة ذهب 50 جرام",
+      "grams": 50.0,
+      "description": "سبيكة ذهبية 50 جرام"
+    }
+  ],
+  "paymentMethods": [
+    {
+      "id": "wallet",
+      "name": "الدفع بالمحفظة",
+      "icon": "account_balance_wallet",
+      "description": "الدفع باستخدام رصيد محفظتك"
+    },
+    {
+      "id": "cash",
+      "name": "تحويل نقدي",
+      "icon": "payments",
+      "description": "الدفع باستخدام التحويل النقدي"
+    },
+    {
+      "id": "bank",
+      "name": "تحويل بنكي",
+      "icon": "account_balance",
+      "description": "الدفع باستخدام التحويل البنكي"
+    },
+    {
+      "id": "card",
+      "name": "بطاقة ائتمان/خصم",
+      "icon": "credit_card",
+      "description": "الدفع باستخدام بطاقة ائتمان أو خصم"
+    },
+    {
+      "id": "crypto",
+      "name": "عملات رقمية",
+      "icon": "currency_bitcoin",
+      "description": "الدفع باستخدام العملات الرقمية"
+    }
+  ]
+}

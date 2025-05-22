@@ -67,12 +67,15 @@ class DepositWithdrawTransaction {
   final double fee;
   final double total;
   final DateTime date;
+  final DateTime? completedDate;
   final DepositWithdrawMethod method;
+  final String? methodId;
   final String? reference;
-  final String? notes;
+  final String? description;
+  final String? failureReason;
+  final String? cancellationReason;
   final String? receiptImageUrl;
-  final BankAccountDetails? bankDetails;
-  final CardDetails? cardDetails;
+  final Map<String, dynamic>? paymentDetails;
 
   const DepositWithdrawTransaction({
     required this.id,
@@ -85,12 +88,15 @@ class DepositWithdrawTransaction {
     required this.fee,
     required this.total,
     required this.date,
+    this.completedDate,
     required this.method,
+    this.methodId,
     this.reference,
-    this.notes,
+    this.description,
+    this.failureReason,
+    this.cancellationReason,
     this.receiptImageUrl,
-    this.bankDetails,
-    this.cardDetails,
+    this.paymentDetails,
   });
 
   /// Create a copy of this transaction with the given fields replaced with the new values
@@ -105,12 +111,15 @@ class DepositWithdrawTransaction {
     double? fee,
     double? total,
     DateTime? date,
+    DateTime? completedDate,
     DepositWithdrawMethod? method,
+    String? methodId,
     String? reference,
-    String? notes,
+    String? description,
+    String? failureReason,
+    String? cancellationReason,
     String? receiptImageUrl,
-    BankAccountDetails? bankDetails,
-    CardDetails? cardDetails,
+    Map<String, dynamic>? paymentDetails,
   }) {
     return DepositWithdrawTransaction(
       id: id ?? this.id,
@@ -123,12 +132,15 @@ class DepositWithdrawTransaction {
       fee: fee ?? this.fee,
       total: total ?? this.total,
       date: date ?? this.date,
+      completedDate: completedDate ?? this.completedDate,
       method: method ?? this.method,
+      methodId: methodId ?? this.methodId,
       reference: reference ?? this.reference,
-      notes: notes ?? this.notes,
+      description: description ?? this.description,
+      failureReason: failureReason ?? this.failureReason,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
       receiptImageUrl: receiptImageUrl ?? this.receiptImageUrl,
-      bankDetails: bankDetails ?? this.bankDetails,
-      cardDetails: cardDetails ?? this.cardDetails,
+      paymentDetails: paymentDetails ?? this.paymentDetails,
     );
   }
 
@@ -143,12 +155,15 @@ class DepositWithdrawTransaction {
       goldWeight: goldWeight,
       goldType: goldType,
       price: 0, // Not applicable for deposit/withdraw
-      fee: fee,
-      total: total,
+      totalAmount: total,
       date: date,
+      completedDate: completedDate,
       paymentMethod: method.translationKey,
+      paymentMethodId: methodId,
       reference: reference,
-      notes: notes,
+      description: description,
+      failureReason: failureReason,
+      cancellationReason: cancellationReason,
     );
   }
 }

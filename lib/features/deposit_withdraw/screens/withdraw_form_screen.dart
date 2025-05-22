@@ -601,7 +601,8 @@ class _WithdrawFormScreenState extends State<WithdrawFormScreen> {
     provider.initializeWithdraw(
       amount: amount,
       method: _selectedMethod,
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+      description:
+          _notesController.text.isNotEmpty ? _notesController.text : null,
     );
 
     // Update method-specific details

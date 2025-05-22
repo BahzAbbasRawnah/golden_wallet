@@ -1,0 +1,46 @@
+{
+  "categories": [
+    {
+      "id": "all",
+      "name": "الكل",
+      "description": "جميع المنتجات الذهبية",
+      "iconName": "all_inclusive"
+    },
+    {
+      "id": "jewelry",
+      "name": "مجوهرات",
+      "description": "مجوهرات ذهبية فاخرة",
+      "iconName": "diamond"
+    },
+    {
+      "id": "coins",
+      "name": "عملات",
+      "description": "عملات ذهبية للاستثمار والهواة",
+      "iconName": "monetization_on"
+    },
+    {
+      "id": "bars",
+      "name": "سبائك",
+      "description": "سبائك ذهبية للاستثمار",
+      "iconName": "view_module"
+    },
+    {
+      "id": "watches",
+      "name": "ساعات",
+      "description": "ساعات ذهبية فاخرة",
+      "iconName": "watch"
+    },
+    {
+      "id": "gifts",
+      "name": "هدايا",
+      "description": "منتجات ذهبية للهدايا",
+      "iconName": "card_giftcard"
+    },
+    {
+      "id": "accessories",
+      "name": "إكسسوارات",
+      "description": "إكسسوارات ذهبية",
+      "iconName": "accessibility"
+    }
+  ]
+}

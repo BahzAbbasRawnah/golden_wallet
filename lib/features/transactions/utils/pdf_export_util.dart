@@ -172,7 +172,8 @@ class PdfExportUtil {
                 _buildCell(
                     '$currency ${transaction.price.toStringAsFixed(2)}', font),
                 _buildCell(
-                    '$currency ${transaction.total.toStringAsFixed(2)}', font),
+                    '$currency ${transaction.totalAmount.toStringAsFixed(2)}',
+                    font),
                 _buildCell(
                     transaction.status.translationKey.toUpperCase(), font),
               ],
@@ -226,16 +227,16 @@ class PdfExportUtil {
     for (final transaction in transactions) {
       switch (transaction.type) {
         case TransactionType.buy:
-          totalBuy += transaction.total;
+          totalBuy += transaction.totalAmount;
           break;
         case TransactionType.sell:
-          totalSell += transaction.total;
+          totalSell += transaction.totalAmount;
           break;
         case TransactionType.deposit:
-          totalDeposit += transaction.total;
+          totalDeposit += transaction.totalAmount;
           break;
         case TransactionType.withdraw:
-          totalWithdraw += transaction.total;
+          totalWithdraw += transaction.totalAmount;
           break;
         default:
           break;

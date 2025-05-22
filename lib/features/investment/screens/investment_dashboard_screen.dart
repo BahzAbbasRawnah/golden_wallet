@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
-import 'package:golden_wallet/features/investment/models/user_investment_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
+import 'package:golden_wallet/features/investment/models/investment_model.dart';
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/features/investment/widgets/investment_plan_card.dart';
 import 'package:golden_wallet/features/investment/widgets/user_investment_card.dart';
@@ -82,23 +83,9 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'investments'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: CustomAppBar(
+        title: 'investments'.tr(),
+        showBackButton: false,
         actions: [
           // Help button
           IconButton(
@@ -151,7 +138,7 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
 
   /// Build portfolio summary section
   Widget _buildPortfolioSummary(
-      BuildContext context, List<UserInvestmentModel> userInvestments) {
+      BuildContext context, List<Investment> userInvestments) {
     // Calculate total investment amount and current value
     double totalInvestment = 0;
     double totalCurrentValue = 0;
@@ -159,7 +146,7 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
     for (final investment in userInvestments) {
       if (investment.status == InvestmentStatus.active ||
           investment.status == InvestmentStatus.pending) {
-        totalInvestment += investment.amount;
+        totalInvestment += investment.initialInvestment;
         totalCurrentValue += investment.currentValue;
       }
     }
@@ -330,7 +317,7 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
 
   /// Build performance chart section
   Widget _buildPerformanceChart(
-      BuildContext context, List<UserInvestmentModel> userInvestments) {
+      BuildContext context, List<Investment> userInvestments) {
     // Generate performance data
     final performanceData = _generatePerformanceData(userInvestments);
 
@@ -563,8 +550,7 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
   }
 
   /// Generate performance data for the chart
-  List<FlSpot> _generatePerformanceData(
-      List<UserInvestmentModel> userInvestments) {
+  List<FlSpot> _generatePerformanceData(List<Investment> userInvestments) {
     // This is a simplified mock implementation
     // In a real app, you would calculate this based on actual investment performance
     return [
@@ -585,7 +571,7 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
 
   /// Build active investments section
   Widget _buildActiveInvestments(
-      BuildContext context, List<UserInvestmentModel> userInvestments) {
+      BuildContext context, List<Investment> userInvestments) {
     final activeInvestments = userInvestments
         .where((investment) =>
             investment.status == InvestmentStatus.active ||
@@ -631,22 +617,27 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
             children: activeInvestments.map((investment) {
               final investmentProvider =
                   Provider.of<InvestmentProvider>(context, listen: false);
-              final plan =
-                  investmentProvider.getInvestmentPlanById(investment.planId);
+              return FutureBuilder<InvestmentPlan?>(
+                future:
+                    investmentProvider.getInvestmentPlanById(investment.planId),
+                builder: (context, snapshot) {
+                  final plan = snapshot.data;
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: UserInvestmentCard(
-                  investment: investment,
-                  plan: plan,
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.investmentDetail,
-                      arguments: investment.id,
-                    );
-                  },
-                ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: UserInvestmentCard(
+                      investment: investment,
+                      plan: plan,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.investmentDetail,
+                          arguments: investment.id,
+                        );
+                      },
+                    ),
+                  );
+                },
               );
             }).toList(),
           ),
@@ -717,7 +708,7 @@ class _InvestmentDashboardScreenState extends State<InvestmentDashboardScreen> {
 
   /// Build available investment plans section
   Widget _buildAvailableInvestmentPlans(
-      BuildContext context, List<InvestmentPlanModel> plans) {
+      BuildContext context, List<InvestmentPlan> plans) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

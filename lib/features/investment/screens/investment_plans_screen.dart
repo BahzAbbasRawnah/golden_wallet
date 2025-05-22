@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/features/investment/widgets/investment_plan_card.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
-import 'package:golden_wallet/shared/widgets/custom_card.dart';
 
 /// Investment plans screen
 class InvestmentPlansScreen extends StatefulWidget {
-  const InvestmentPlansScreen({Key? key}) : super(key: key);
+  const InvestmentPlansScreen({super.key});
 
   @override
   State<InvestmentPlansScreen> createState() => _InvestmentPlansScreenState();
@@ -20,7 +20,7 @@ class InvestmentPlansScreen extends StatefulWidget {
 class _InvestmentPlansScreenState extends State<InvestmentPlansScreen> {
   bool _isLoading = false;
   RiskLevel? _selectedRiskLevel;
-  InvestmentPlanType? _selectedPlanType;
+  PaymentFrequency? _selectedPlanType;
 
   @override
   void initState() {
@@ -55,7 +55,6 @@ class _InvestmentPlansScreenState extends State<InvestmentPlansScreen> {
   Widget build(BuildContext context) {
     final investmentProvider = Provider.of<InvestmentProvider>(context);
     final plans = investmentProvider.activeInvestmentPlans;
-    final isRtl = Directionality.of(context) == TextDirection.RTL;
 
     // Apply filters
     var filteredPlans = plans;
@@ -66,28 +65,15 @@ class _InvestmentPlansScreenState extends State<InvestmentPlansScreen> {
     }
     if (_selectedPlanType != null) {
       filteredPlans = filteredPlans
-          .where((plan) => plan.type == _selectedPlanType)
+          .where(
+              (plan) => plan.paymentFrequency.name == _selectedPlanType?.name)
           .toList();
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'investmentPlans'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: CustomAppBar(
+        title: 'investmentPlans'.tr(),
+        showBackButton: true,
       ),
       body: _isLoading
           ? const Center(
@@ -145,7 +131,7 @@ class _InvestmentPlansScreenState extends State<InvestmentPlansScreen> {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -201,7 +187,7 @@ class _InvestmentPlansScreenState extends State<InvestmentPlansScreen> {
                           Theme.of(context).brightness == Brightness.dark
                               ? Colors.grey[800]
                               : Colors.grey[200],
-                      selectedColor: riskLevel.color.withOpacity(0.2),
+                      selectedColor: riskLevel.color.withAlpha(51),
                       checkmarkColor: riskLevel.color,
                       labelStyle: TextStyle(
                         color: isSelected
@@ -216,25 +202,25 @@ class _InvestmentPlansScreenState extends State<InvestmentPlansScreen> {
 
                 const SizedBox(width: 8),
 
-                // Plan type filters
-                ...InvestmentPlanType.values.map((planType) {
-                  final isSelected = _selectedPlanType == planType;
+                // Payment frequency filters
+                ...PaymentFrequency.values.map((frequency) {
+                  final isSelected = _selectedPlanType == frequency;
 
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilterChip(
-                      label: Text(planType.translationKey.tr()),
+                      label: Text(frequency.translationKey.tr()),
                       selected: isSelected,
                       onSelected: (selected) {
                         setState(() {
-                          _selectedPlanType = selected ? planType : null;
+                          _selectedPlanType = selected ? frequency : null;
                         });
                       },
                       backgroundColor:
                           Theme.of(context).brightness == Brightness.dark
                               ? Colors.grey[800]
                               : Colors.grey[200],
-                      selectedColor: AppTheme.goldColor.withOpacity(0.2),
+                      selectedColor: AppTheme.goldColor.withAlpha(51),
                       checkmarkColor: AppTheme.goldDark,
                       labelStyle: TextStyle(
                         color: isSelected

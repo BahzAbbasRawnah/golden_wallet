@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
@@ -164,26 +165,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final isFiltered = _selectedTypes.length < NotificationType.values.length || 
                        _startDate != null || 
                        _endDate != null;
-    final isRtl = Directionality.of(context) == TextDirection.RTL;
     
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'notifications'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        appBar: CustomAppBar(
+        title: 'notifications'.tr(),
+        showBackButton: true,
         actions: [
           // Filter button
           IconButton(
@@ -246,7 +232,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ],
           ),
         ],
+      
       ),
+    
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(

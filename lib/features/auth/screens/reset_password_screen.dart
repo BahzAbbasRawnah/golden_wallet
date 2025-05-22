@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 import 'package:golden_wallet/shared/widgets/custom_text_field.dart';
+import 'package:golden_wallet/shared/widgets/custom_messages.dart';
 
 /// Reset password screen
 class ResetPasswordScreen extends StatefulWidget {
@@ -38,37 +40,38 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       // Simulate API call delay
       await Future.delayed(const Duration(seconds: 2));
 
-      // Navigate to login screen
+      // Show success message
       if (mounted) {
-        Navigator.pushNamed(context, AppRoutes.login);
-      }
+        setState(() {
+          _isLoading = false;
+        });
 
-      setState(() {
-        _isLoading = false;
-      });
+        // Show success message
+        context.showSuccessMessage(
+          'passwordChanged'.tr(),
+          duration: const Duration(seconds: 2),
+        );
+
+        // Navigate after a short delay to allow the user to see the success message
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            Navigator.pushNamed(context, AppRoutes.login);
+          }
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'resetPassword'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'resetPassword'.tr(),
+        showBackButton: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -195,11 +198,3 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-

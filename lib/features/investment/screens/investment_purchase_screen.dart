@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
 import 'package:golden_wallet/features/investment/models/user_investment_model.dart';
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
@@ -15,9 +16,9 @@ class InvestmentPurchaseScreen extends StatefulWidget {
   final String planId;
 
   const InvestmentPurchaseScreen({
-    Key? key,
+    super.key,
     required this.planId,
-  }) : super(key: key);
+  });
 
   @override
   State<InvestmentPurchaseScreen> createState() =>
@@ -47,41 +48,39 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
   }
 
   /// Initialize values based on the selected plan
-  void _initializeValues() {
+  void _initializeValues() async {
     final investmentProvider =
         Provider.of<InvestmentProvider>(context, listen: false);
-    final plan = investmentProvider.getInvestmentPlanById(widget.planId);
+    final plan = await investmentProvider.getInvestmentPlanById(widget.planId);
 
-    if (plan != null) {
-      _amountController.text = plan.minAmount.toString();
-      _selectedDuration = plan.minDurationMonths;
-      _recurringAmount = plan.minAmount *
-          0.1; // 10% of initial investment as default recurring amount
+    if (plan != null && mounted) {
+      setState(() {
+        _amountController.text = plan.minInvestment.toString();
+        _selectedDuration = plan.duration.min;
+        _recurringAmount = plan.minInvestment *
+            0.1; // 10% of initial investment as default recurring amount
+      });
     }
   }
 
-  /// Calculate management fee
+  /// Calculate management fee (assuming 1% for all plans)
   double _calculateManagementFee() {
-    final investmentProvider =
-        Provider.of<InvestmentProvider>(context, listen: false);
-    final plan = investmentProvider.getInvestmentPlanById(widget.planId);
-
-    if (plan == null || _amountController.text.isEmpty) return 0;
+    if (_amountController.text.isEmpty) return 0;
 
     final amount = double.tryParse(_amountController.text) ?? 0;
-    return amount * (plan.managementFeePercentage / 100);
+    // Using a fixed 1% management fee for all plans
+    return amount * 0.01;
   }
 
   /// Calculate expected returns
   double _calculateExpectedReturns() {
-    final investmentProvider =
-        Provider.of<InvestmentProvider>(context, listen: false);
-    final plan = investmentProvider.getInvestmentPlanById(widget.planId);
+    if (_amountController.text.isEmpty) return 0;
 
-    if (plan == null || _amountController.text.isEmpty) return 0;
-
+    // Use a fixed average return rate of 5% for calculation
+    // The actual rate will be fetched from the plan in the UI building methods
     final amount = double.tryParse(_amountController.text) ?? 0;
-    final annualReturn = amount * (plan.expectedReturnsPercentage / 100);
+    final averageReturnRate = 5.0; // Default value
+    final annualReturn = amount * (averageReturnRate / 100);
     final durationYears = _selectedDuration / 12;
 
     // Simple interest calculation for demonstration
@@ -98,144 +97,108 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
     return amount + expectedReturns;
   }
 
-  /// Proceed to confirmation
-  void _proceedToConfirmation() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final amount = double.tryParse(_amountController.text) ?? 0;
-
-      // Create recurring details if selected
-      RecurringInvestmentDetails? recurringDetails;
-      if (_isRecurring) {
-        final now = DateTime.now();
-        recurringDetails = RecurringInvestmentDetails(
-          frequency: _recurringFrequency,
-          day: _recurringDay,
-          amount: _recurringAmount,
-          nextInvestmentDate: DateTime(now.year, now.month + 1, _recurringDay),
-        );
-      }
-
-      // Navigate to confirmation screen
-      Navigator.pushNamed(
-        context,
-        AppRoutes.investmentConfirmation,
-        arguments: {
-          'planId': widget.planId,
-          'amount': amount,
-          'duration': _selectedDuration,
-          'isRecurring': _isRecurring,
-          'recurringDetails': recurringDetails,
-          'managementFee': _calculateManagementFee(),
-          'expectedReturns': _calculateExpectedReturns(),
-          'totalValue': _calculateTotalValue(),
-        },
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final investmentProvider = Provider.of<InvestmentProvider>(context);
-    final plan = investmentProvider.getInvestmentPlanById(widget.planId);
-    final isRtl = Directionality.of(context) == TextDirection.RTL;
 
-    if (plan == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-              color: AppTheme.goldDark,
+    return FutureBuilder<InvestmentPlan?>(
+      future: investmentProvider.getInvestmentPlanById(widget.planId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: CustomAppBar(
+              title: 'investment'.tr(),
+              showBackButton: true,
             ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: Center(
-          child: Text('investmentPlanNotFound'.tr()),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'investIn'.tr(args: [plan.name]),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Plan summary
-              _buildPlanSummary(context, plan),
-              const SizedBox(height: 24),
-
-              // Investment amount
-              _buildInvestmentAmount(context, plan),
-              const SizedBox(height: 24),
-
-              // Investment duration
-              _buildInvestmentDuration(context, plan),
-              const SizedBox(height: 24),
-
-              // Recurring investment option
-              _buildRecurringInvestment(context, plan),
-              const SizedBox(height: 24),
-
-              // Investment summary
-              _buildInvestmentSummary(context, plan),
-              const SizedBox(height: 32),
-
-              // Continue button
-              Container(
-                decoration: BoxDecoration(
-                  gradient: AppTheme.goldGradient,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withAlpha(70),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: CustomButton(
-                  text: 'continueToConfirmation'.tr(),
-                  onPressed: _isLoading ? () {} : _proceedToConfirmation,
-                  isLoading: _isLoading,
-                  type: ButtonType.primary,
-                  backgroundColor: Colors.transparent,
-                  textColor: Colors.white,
-                  isFullWidth: true,
-                ),
+            body: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldDark),
               ),
-            ],
+            ),
+          );
+        }
+
+        final plan = snapshot.data;
+
+        if (plan == null) {
+          return Scaffold(
+            appBar: CustomAppBar(
+              title: 'investmentPlanNotFound'.tr(),
+              showBackButton: true,
+            ),
+            body: Center(
+              child: Text('investmentPlanNotFound'.tr()),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: CustomAppBar(
+            title: 'investIn'.tr() + plan.name,
+            showBackButton: true,
           ),
-        ),
-      ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Plan summary
+                  _buildPlanSummary(context, plan),
+                  const SizedBox(height: 24),
+
+                  // Investment amount
+                  _buildInvestmentAmount(context, plan),
+                  const SizedBox(height: 24),
+
+                  // Investment duration
+                  _buildInvestmentDuration(context, plan),
+                  const SizedBox(height: 24),
+
+                  // Recurring investment option
+                  _buildRecurringInvestment(context, plan),
+                  const SizedBox(height: 24),
+
+                  // Investment summary
+                  _buildInvestmentSummary(context, plan),
+                  const SizedBox(height: 32),
+
+                  // Continue button
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.goldGradient,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withAlpha(70),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: CustomButton(
+                      text: 'continueToConfirmation'.tr(),
+                      onPressed: _isLoading ? () {} : _proceedToConfirmation,
+                      isLoading: _isLoading,
+                      type: ButtonType.primary,
+                      backgroundColor: Colors.transparent,
+                      textColor: Colors.white,
+                      isFullWidth: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   /// Build plan summary
-  Widget _buildPlanSummary(BuildContext context, InvestmentPlanModel plan) {
+  Widget _buildPlanSummary(BuildContext context, InvestmentPlan plan) {
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,11 +209,11 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withOpacity(0.1),
+                  color: AppTheme.goldColor.withAlpha(26), // 0.1 opacity
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  plan.type.icon,
+                  _getPaymentFrequencyIcon(plan.paymentFrequency),
                   color: AppTheme.goldDark,
                   size: 20,
                 ),
@@ -268,7 +231,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    plan.type.translationKey.tr(),
+                    plan.paymentFrequency.translationKey.tr(),
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.grey[300]
@@ -301,7 +264,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${plan.expectedReturnsPercentage}% ${'perAnnum'.tr()}',
+                      '${_calculateAverageReturn(plan).toStringAsFixed(1)}% ${'perAnnum'.tr()}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.goldDark,
@@ -356,9 +319,29 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
     );
   }
 
+  /// Calculate average return for a plan
+  double _calculateAverageReturn(InvestmentPlan plan) {
+    return (plan.expectedReturns.min + plan.expectedReturns.max) / 2;
+  }
+
+  /// Get icon for payment frequency
+  IconData _getPaymentFrequencyIcon(PaymentFrequency frequency) {
+    switch (frequency) {
+      case PaymentFrequency.one_time:
+        return Icons.payment;
+      case PaymentFrequency.monthly:
+        return Icons.calendar_month;
+      case PaymentFrequency.quarterly:
+        return Icons.date_range;
+      case PaymentFrequency.semi_annually:
+        return Icons.calendar_view_month;
+      case PaymentFrequency.annually:
+        return Icons.calendar_today;
+    }
+  }
+
   /// Build investment amount section
-  Widget _buildInvestmentAmount(
-      BuildContext context, InvestmentPlanModel plan) {
+  Widget _buildInvestmentAmount(BuildContext context, InvestmentPlan plan) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -388,20 +371,19 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
               return 'invalidAmount'.tr();
             }
 
-            if (amount < plan.minAmount) {
-              return 'amountTooLow'.tr(args: [plan.minAmount.toString()]);
+            if (amount < plan.minInvestment) {
+              return 'amountTooLow'.tr(args: [plan.minInvestment.toString()]);
             }
 
-            if (plan.maxAmount != null && amount > plan.maxAmount!) {
-              return 'amountTooHigh'.tr(args: [plan.maxAmount.toString()]);
-            }
+            // Assuming there's no max investment in the new model
+            // If needed, we can add a check for a maximum amount here
 
             return null;
           },
         ),
         const SizedBox(height: 8),
         Text(
-          '${'minAmount'.tr()}: \$${plan.minAmount.toStringAsFixed(2)}${plan.maxAmount != null ? ' • ${'maxAmount'.tr()}: \$${plan.maxAmount!.toStringAsFixed(2)}' : ''}',
+          '${'minAmount'.tr()}: ${plan.currency} ${plan.minInvestment.toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: 12,
             color: Theme.of(context).brightness == Brightness.dark
@@ -416,11 +398,10 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildQuickAmountButton(context, plan.minAmount),
-            _buildQuickAmountButton(context, plan.minAmount * 2),
-            _buildQuickAmountButton(context, plan.minAmount * 5),
-            if (plan.maxAmount != null)
-              _buildQuickAmountButton(context, plan.maxAmount!),
+            _buildQuickAmountButton(context, plan.minInvestment),
+            _buildQuickAmountButton(context, plan.minInvestment * 2),
+            _buildQuickAmountButton(context, plan.minInvestment * 5),
+            _buildQuickAmountButton(context, plan.minInvestment * 10),
           ],
         ),
       ],
@@ -439,7 +420,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: AppTheme.goldColor.withOpacity(0.1),
+          color: AppTheme.goldColor.withAlpha(26), // 0.1 opacity
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -455,19 +436,16 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
   }
 
   /// Build investment duration section
-  Widget _buildInvestmentDuration(
-      BuildContext context, InvestmentPlanModel plan) {
+  Widget _buildInvestmentDuration(BuildContext context, InvestmentPlan plan) {
     // Generate duration options
     final durationOptions = <int>[];
-    for (int i = plan.minDurationMonths;
-        i <= (plan.maxDurationMonths ?? plan.minDurationMonths * 5);
-        i += 12) {
+    for (int i = plan.duration.min; i <= plan.duration.max; i += 3) {
       durationOptions.add(i);
     }
 
     // If no options were added (e.g., min duration is already high), add at least the min duration
     if (durationOptions.isEmpty) {
-      durationOptions.add(plan.minDurationMonths);
+      durationOptions.add(plan.duration.min);
     }
 
     return Column(
@@ -533,7 +511,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),
@@ -542,8 +520,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
   }
 
   /// Build recurring investment section
-  Widget _buildRecurringInvestment(
-      BuildContext context, InvestmentPlanModel plan) {
+  Widget _buildRecurringInvestment(BuildContext context, InvestmentPlan plan) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -578,7 +555,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
                         });
                       },
                       activeColor: AppTheme.goldDark,
-                      activeTrackColor: AppTheme.goldColor.withOpacity(0.5),
+                      activeTrackColor: AppTheme.goldColor.withAlpha(128),
                     ),
                   ],
                 ),
@@ -726,8 +703,7 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
   }
 
   /// Build investment summary section
-  Widget _buildInvestmentSummary(
-      BuildContext context, InvestmentPlanModel plan) {
+  Widget _buildInvestmentSummary(BuildContext context, InvestmentPlan plan) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -755,9 +731,9 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
               _buildSummaryRow(
                 context: context,
                 title: 'managementFee'.tr(),
-                value: '\$${_calculateManagementFee().toStringAsFixed(2)}',
-                subtitle:
-                    '${plan.managementFeePercentage}% ${'ofInvestment'.tr()}',
+                value:
+                    '${plan.currency} ${_calculateManagementFee().toStringAsFixed(2)}',
+                subtitle: '1.0% ${'ofInvestment'.tr()}',
               ),
               const Divider(),
 
@@ -765,10 +741,11 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
               _buildSummaryRow(
                 context: context,
                 title: 'expectedReturns'.tr(),
-                value: '\$${_calculateExpectedReturns().toStringAsFixed(2)}',
+                value:
+                    '${plan.currency} ${_calculateExpectedReturns().toStringAsFixed(2)}',
                 valueColor: AppTheme.successColor,
                 subtitle:
-                    '${plan.expectedReturnsPercentage}% ${'perAnnum'.tr()} × ${_selectedDuration / 12} ${'years'.tr()}',
+                    '${_calculateAverageReturn(plan).toStringAsFixed(1)}% ${'perAnnum'.tr()} × ${_selectedDuration / 12} ${'years'.tr()}',
               ),
               const Divider(),
 
@@ -835,5 +812,78 @@ class _InvestmentPurchaseScreenState extends State<InvestmentPurchaseScreen> {
         ],
       ),
     );
+  }
+
+  /// Proceed to confirmation screen
+  void _proceedToConfirmation() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      final investmentProvider =
+          Provider.of<InvestmentProvider>(context, listen: false);
+      final plan =
+          await investmentProvider.getInvestmentPlanById(widget.planId);
+
+      if (plan != null) {
+        final amount = double.tryParse(_amountController.text) ?? 0;
+
+        // Create investment details
+        final expectedReturns = _calculateExpectedReturns();
+        final returnPercentage = (expectedReturns / amount) * 100;
+
+        final investmentDetails = UserInvestmentModel(
+          id: 'inv_${DateTime.now().millisecondsSinceEpoch}',
+          userId: 'user_123', // Mock user ID
+          planId: plan.id,
+          amount: amount,
+          durationMonths: _selectedDuration,
+          startDate: DateTime.now(),
+          endDate: DateTime.now().add(Duration(days: _selectedDuration * 30)),
+          status: InvestmentStatus.pending,
+          currentValue: amount, // Initial value is the investment amount
+          returnPercentage: returnPercentage,
+          isRecurring: _isRecurring,
+          recurringDetails: _isRecurring
+              ? RecurringInvestmentDetails(
+                  frequency: 'monthly',
+                  day: 1, // First day of the month
+                  amount: _recurringAmount,
+                  nextInvestmentDate:
+                      DateTime.now().add(const Duration(days: 30)),
+                )
+              : null,
+          transactions: [
+            // Initial investment transaction
+            InvestmentTransaction(
+              id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+              investmentId: 'inv_${DateTime.now().millisecondsSinceEpoch}',
+              type: 'deposit',
+              amount: amount,
+              date: DateTime.now(),
+            ),
+          ],
+        );
+
+        // Navigate to confirmation screen
+        if (mounted) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.investmentConfirmation,
+            arguments: investmentDetails,
+          );
+        }
+      }
+    }
   }
 }

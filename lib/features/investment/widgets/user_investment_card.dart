@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
-import 'package:golden_wallet/features/investment/models/user_investment_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
+import 'package:golden_wallet/features/investment/models/investment_model.dart';
 import 'package:golden_wallet/shared/widgets/custom_card.dart';
 
 /// Widget for displaying a user investment card
 class UserInvestmentCard extends StatelessWidget {
-  final UserInvestmentModel investment;
-  final InvestmentPlanModel? plan;
+  final Investment investment;
+  final InvestmentPlan? plan;
   final VoidCallback onTap;
-  
+
   const UserInvestmentCard({
     Key? key,
     required this.investment,
     required this.plan,
     required this.onTap,
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     final isActive = investment.status == InvestmentStatus.active;
-    
+
     return CustomCard(
       onTap: onTap,
       child: Column(
@@ -39,12 +39,13 @@ class UserInvestmentCard extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
-              
+
               // Status
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(investment.status).withOpacity(0.1),
+                  color: _getStatusColor(investment.status).withAlpha(25),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -59,7 +60,7 @@ class UserInvestmentCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Investment amount and current value
           Row(
             children: [
@@ -79,7 +80,7 @@ class UserInvestmentCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${investment.amount.toStringAsFixed(2)}',
+                      '${investment.currency} ${investment.initialInvestment.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
@@ -87,7 +88,7 @@ class UserInvestmentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Current value
               Expanded(
                 child: Column(
@@ -104,10 +105,12 @@ class UserInvestmentCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${investment.currentValue.toStringAsFixed(2)}',
+                      '${investment.currency} ${investment.currentValue.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: investment.profitAmount >= 0
+                        color: (investment.currentValue -
+                                    investment.initialInvestment) >=
+                                0
                             ? AppTheme.successColor
                             : AppTheme.errorColor,
                       ),
@@ -115,7 +118,7 @@ class UserInvestmentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Return percentage
               Expanded(
                 child: Column(
@@ -134,20 +137,20 @@ class UserInvestmentCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          investment.returnPercentage >= 0
+                          investment.returnRate >= 0
                               ? Icons.arrow_upward
                               : Icons.arrow_downward,
-                          color: investment.returnPercentage >= 0
+                          color: investment.returnRate >= 0
                               ? AppTheme.successColor
                               : AppTheme.errorColor,
                           size: 16,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${investment.returnPercentage >= 0 ? '+' : ''}${investment.returnPercentage.toStringAsFixed(2)}%',
+                          '${investment.returnRate >= 0 ? '+' : ''}${investment.returnRate.toStringAsFixed(2)}%',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: investment.returnPercentage >= 0
+                            color: investment.returnRate >= 0
                                 ? AppTheme.successColor
                                 : AppTheme.errorColor,
                           ),
@@ -159,11 +162,11 @@ class UserInvestmentCard extends StatelessWidget {
               ),
             ],
           ),
-          
+
           // Progress bar (if active)
           if (isActive) ...[
             const SizedBox(height: 16),
-            
+
             // Progress percentage
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -178,7 +181,8 @@ class UserInvestmentCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${investment.progressPercentage.toStringAsFixed(1)}%',
+                  // Calculate progress based on start and end dates
+                  _calculateProgressPercentage(investment),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
@@ -187,12 +191,12 @@ class UserInvestmentCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            
+
             // Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: investment.progressPercentage / 100,
+                value: _calculateProgressValue(investment),
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[800]
                     : Colors.grey[200],
@@ -201,40 +205,13 @@ class UserInvestmentCard extends StatelessWidget {
               ),
             ),
           ],
-          
-          // Recurring indicator (if applicable)
-          if (investment.isRecurring && investment.recurringDetails != null) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(
-                  Icons.repeat,
-                  size: 16,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[300]
-                      : Colors.grey[600],
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'recurringInvestment'.tr(args: [
-                    investment.recurringDetails!.frequency.tr(),
-                    '\$${investment.recurringDetails!.amount.toStringAsFixed(2)}',
-                  ]),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[300]
-                        : Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ],
+
+          // We'll implement recurring investments in a future update
         ],
       ),
     );
   }
-  
+
   /// Get color for investment status
   Color _getStatusColor(InvestmentStatus status) {
     switch (status) {
@@ -247,5 +224,33 @@ class UserInvestmentCard extends StatelessWidget {
       case InvestmentStatus.pending:
         return AppTheme.warningColor;
     }
+  }
+
+  /// Calculate progress percentage as a string
+  String _calculateProgressPercentage(Investment investment) {
+    if (investment.status == InvestmentStatus.completed) return '100.0%';
+    if (investment.status == InvestmentStatus.cancelled) return '0.0%';
+
+    final now = DateTime.now();
+    final totalDuration =
+        investment.endDate.difference(investment.startDate).inMilliseconds;
+    final elapsedDuration = now.difference(investment.startDate).inMilliseconds;
+
+    final progress = (elapsedDuration / totalDuration) * 100;
+    return '${progress.clamp(0.0, 100.0).toStringAsFixed(1)}%';
+  }
+
+  /// Calculate progress value for the progress bar
+  double _calculateProgressValue(Investment investment) {
+    if (investment.status == InvestmentStatus.completed) return 1.0;
+    if (investment.status == InvestmentStatus.cancelled) return 0.0;
+
+    final now = DateTime.now();
+    final totalDuration =
+        investment.endDate.difference(investment.startDate).inMilliseconds;
+    final elapsedDuration = now.difference(investment.startDate).inMilliseconds;
+
+    final progress = elapsedDuration / totalDuration;
+    return progress.clamp(0.0, 1.0);
   }
 }

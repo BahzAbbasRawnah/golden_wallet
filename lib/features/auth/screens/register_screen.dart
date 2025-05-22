@@ -4,8 +4,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:golden_wallet/config/constants.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 import 'package:golden_wallet/shared/widgets/custom_text_field.dart';
+import 'package:golden_wallet/shared/widgets/custom_messages.dart';
 import 'package:image_picker/image_picker.dart';
 
 /// Register screen
@@ -62,14 +64,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'errorOccurred'.tr(),
-          ),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      if (mounted) {
+        context.showErrorMessage(
+          'errorOccurred'.tr(),
+          action: CustomSnackBarMessages.createRetryAction(() {
+            _pickImage(source, isFrontImage);
+          }),
+        );
+      }
     }
   }
 
@@ -121,29 +123,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       // Check terms acceptance
       if (!_acceptTerms) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'acceptTermsError'.tr(),
-            ),
-            backgroundColor: AppTheme.errorColor,
-          ),
+        context.showWarningMessage(
+          'acceptTermsError'.tr(),
+          action: CustomSnackBarMessages.createDismissAction(() {
+            // Dismiss action
+          }),
         );
         return;
       }
 
       // Check identity images
       if (_identityFrontImage == null || _identityBackImage == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _identityFrontImage == null && _identityBackImage == null
-                  ? 'bothIdentityImagesRequired'.tr()
-                  : _identityFrontImage == null
-                      ? 'identityFrontRequired'.tr()
-                      : 'identityBackRequired'.tr(),
-            ),
-            backgroundColor: AppTheme.errorColor,
+        String errorMessage =
+            _identityFrontImage == null && _identityBackImage == null
+                ? 'bothIdentityImagesRequired'.tr()
+                : _identityFrontImage == null
+                    ? 'identityFrontRequired'.tr()
+                    : 'identityBackRequired'.tr();
+
+        context.showErrorMessage(
+          errorMessage,
+          action: CustomSnackBarMessages.createAction(
+            label: 'uploadNow'.tr(),
+            onPressed: () {
+              _showImagePickerOptions(_identityFrontImage == null);
+            },
           ),
         );
         return;
@@ -156,14 +160,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Simulate registration delay
       await Future.delayed(const Duration(seconds: 2));
 
-      // Navigate to phone verification
+      // Show success message and navigate to phone verification
       if (mounted) {
-        _navigateToPhoneVerification();
-      }
+        setState(() {
+          _isLoading = false;
+        });
 
-      setState(() {
-        _isLoading = false;
-      });
+        // Show success message
+        context.showSuccessMessage(
+          'registrationSuccessful'.tr(),
+          duration: const Duration(seconds: 2),
+        );
+
+        // Navigate after a short delay to allow the user to see the success message
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            _navigateToPhoneVerification();
+          }
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -174,11 +193,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       AppRoutes.phoneVerification,
       arguments: _emailController.text,
     );
-  }
-
-  // Navigate to dashboard
-  void _navigateToDashboard() {
-    Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
   }
 
   // Build image picker widget
@@ -278,17 +292,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -454,25 +457,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 32),
 
                   // Register button with gold gradient
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.goldGradient,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryColor.withAlpha(70),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
+                  Center(
                     child: CustomButton(
                       text: 'signUp'.tr(),
                       onPressed: _register,
                       isLoading: _isLoading,
                       type: ButtonType.primary,
-                      backgroundColor: Colors.transparent,
-                      textColor: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),

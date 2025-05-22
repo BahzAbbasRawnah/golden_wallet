@@ -9,13 +9,13 @@ import 'package:golden_wallet/shared/widgets/custom_card.dart';
 class TransactionListItem extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback onTap;
-  
+
   const TransactionListItem({
     Key? key,
     required this.transaction,
     required this.onTap,
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -42,7 +42,7 @@ class TransactionListItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Transaction info
                 Expanded(
                   child: Column(
@@ -50,9 +50,10 @@ class TransactionListItem extends StatelessWidget {
                     children: [
                       Text(
                         transaction.type.translationKey.tr(),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       Text(
                         transaction.id,
@@ -63,13 +64,13 @@ class TransactionListItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 // Transaction amount
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${transaction.type.isIncoming ? '+' : '-'} \$${transaction.total.toStringAsFixed(2)}',
+                      '${transaction.type.isIncoming ? '+' : '-'} ${transaction.currency} ${transaction.totalAmount.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: transaction.type.isIncoming
@@ -87,17 +88,18 @@ class TransactionListItem extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            
+
             // Transaction details
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Gold weight and type
-                if (transaction.goldWeight != null && transaction.goldType != null)
+                if (transaction.goldWeight != null &&
+                    transaction.goldType != null)
                   _buildDetailItem(
                     context,
                     'weight'.tr(),
@@ -109,14 +111,14 @@ class TransactionListItem extends StatelessWidget {
                     'amount'.tr(),
                     '\$${transaction.amount.toStringAsFixed(2)}',
                   ),
-                
+
                 // Price
                 _buildDetailItem(
                   context,
                   'price'.tr(),
                   '\$${transaction.price.toStringAsFixed(2)}',
                 ),
-                
+
                 // Status
                 _buildStatusChip(context, transaction.status),
               ],
@@ -126,7 +128,7 @@ class TransactionListItem extends StatelessWidget {
       ),
     );
   }
-  
+
   /// Build detail item
   Widget _buildDetailItem(BuildContext context, String label, String value) {
     return Column(
@@ -148,7 +150,7 @@ class TransactionListItem extends StatelessWidget {
       ],
     );
   }
-  
+
   /// Build status chip
   Widget _buildStatusChip(BuildContext context, TransactionStatus status) {
     return Container(

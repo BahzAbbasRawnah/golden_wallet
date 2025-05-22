@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 /// Theme configuration for the GoldenWallet application
 class AppTheme {
   // Primary color: Gold (#FFD700) - Enhanced for gold shop
-  static const Color primaryColor = Color(0xFFFFD700); // Pure gold
-  static const Color primaryLightColor = Color(0xFFFFF0A0); // Light gold
-  static const Color primaryDarkColor = Color(0xFFDAA520); // Golden rod
+  static const Color primaryColor = Color(0xFFD4AF37); // Pure gold
+  static const Color primaryLightColor = Color(0xFFEFD98B); // Light gold
+  static const Color primaryDarkColor = Color(0xFFAA8C2C); // Golden rod
   static const Color goldColor = Color(0xFFD4AF37); // Metallic gold
   static const Color goldLight = Color(0xFFF5E7A0); // Pale gold
   static const Color goldDark = Color(0xFFB8860B); // Dark goldenrod
+
+    // Secondary Colors
+  static const Color secondaryBlack = Color(0xFF1A1A1A);
+  static const Color secondaryGrey = Color(0xFF4A4A4A);
+  static const Color secondaryLightGrey = Color(0xFFE0E0E0);
 
   // Accent color: Deep red (#B22222) - For important actions and alerts
   static const Color accentColor = Color(0xFFB22222); // Firebrick red
@@ -18,7 +23,7 @@ class AppTheme {
   // Neutral colors
   static const Color textDarkColor = Color(0xFF212121);
   static const Color textLightColor = Color(0xFFF5F5F5);
-  static const Color backgroundLightColor = Color(0xFFFAFAFA);
+  static const Color backgroundLightColor = Color(0xFFF9F9F9);
   static const Color backgroundDarkColor = Color(0xFF121212);
   static const Color surfaceLightColor = Color(0xFFFFFFFF);
   static const Color surfaceDarkColor = Color(0xFF1E1E1E);
@@ -43,13 +48,13 @@ class AppTheme {
 
   // Card gradients
   static const LinearGradient goldGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFFFD700), // Gold
-      Color(0xFFDAA520), // Golden rod
-    ],
-  );
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFFFFD700), // Gold
+          Color(0xFFDAA520), // Golden rod
+        ],
+      );
 
   static const LinearGradient premiumGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -77,7 +82,7 @@ class AppTheme {
     primaryColor: primaryColor,
     colorScheme: ColorScheme.light(
       primary: primaryColor,
-      secondary: accentColor,
+      secondary: secondaryBlack,
       surface: surfaceLightColor,
       surfaceContainer: backgroundLightColor,
       error: errorColor,
@@ -102,7 +107,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        foregroundColor: textDarkColor,
+        foregroundColor: textLightColor,
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -134,12 +139,12 @@ class AppTheme {
       fillColor: surfaceLightColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: primaryColor, width: 1),
+        borderSide: const BorderSide(color: secondaryLightGrey, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(
-            color: primaryColor.withAlpha(128), // 0.5 opacity (128/255)
+            color: secondaryLightGrey,
             width: 1),
       ),
       focusedBorder: OutlineInputBorder(

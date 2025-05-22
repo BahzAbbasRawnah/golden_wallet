@@ -292,13 +292,14 @@ class _TransactionConfirmationScreenState
             valueColor: transaction.status.color,
           ),
 
-          // Notes (if any)
-          if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
+          // Description (if any)
+          if (transaction.description != null &&
+              transaction.description!.isNotEmpty) ...[
             const Divider(),
             _buildDetailRow(
               context: context,
-              label: 'notes'.tr(),
-              value: transaction.notes!,
+              label: 'description'.tr(),
+              value: transaction.description!,
             ),
           ],
         ],
@@ -324,13 +325,13 @@ class _TransactionConfirmationScreenState
 
           // Method-specific details
           if (transaction.method == DepositWithdrawMethod.bankTransfer &&
-              transaction.bankDetails != null) ...[
+              transaction.paymentDetails != null) ...[
             const Divider(),
-            _buildBankDetails(context, transaction.bankDetails!),
+            _buildPaymentDetails(context, transaction.paymentDetails!),
           ] else if (transaction.method == DepositWithdrawMethod.cardPayment &&
-              transaction.cardDetails != null) ...[
+              transaction.paymentDetails != null) ...[
             const Divider(),
-            _buildCardDetails(context, transaction.cardDetails!),
+            _buildPaymentDetails(context, transaction.paymentDetails!),
           ],
 
           // Reference number (if any)
@@ -386,71 +387,26 @@ class _TransactionConfirmationScreenState
     );
   }
 
-  /// Build bank details
-  Widget _buildBankDetails(BuildContext context, BankAccountDetails details) {
+  /// Build payment details
+  Widget _buildPaymentDetails(
+      BuildContext context, Map<String, dynamic> details) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailRow(
-          context: context,
-          label: 'bankName'.tr(),
-          value: details.bankName,
-        ),
-        const SizedBox(height: 8),
-        _buildDetailRow(
-          context: context,
-          label: 'accountNumber'.tr(),
-          value: details.accountNumber,
-        ),
-        const SizedBox(height: 8),
-        _buildDetailRow(
-          context: context,
-          label: 'accountHolderName'.tr(),
-          value: details.accountHolderName,
-        ),
-        if (details.swiftCode != null && details.swiftCode!.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _buildDetailRow(
-            context: context,
-            label: 'swiftCode'.tr(),
-            value: details.swiftCode!,
-          ),
-        ],
-        if (details.iban != null && details.iban!.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _buildDetailRow(
-            context: context,
-            label: 'iban'.tr(),
-            value: details.iban!,
-          ),
-        ],
-      ],
-    );
-  }
-
-  /// Build card details
-  Widget _buildCardDetails(BuildContext context, CardDetails details) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildDetailRow(
-          context: context,
-          label: 'cardNumber'.tr(),
-          value: DepositWithdrawFormattingUtils.formatCardNumber(
-              details.cardNumber),
-        ),
-        const SizedBox(height: 8),
-        _buildDetailRow(
-          context: context,
-          label: 'cardHolderName'.tr(),
-          value: details.cardHolderName,
-        ),
-        const SizedBox(height: 8),
-        _buildDetailRow(
-          context: context,
-          label: 'expiryDate'.tr(),
-          value: details.expiryDate,
-        ),
+        for (final entry in details.entries)
+          if (entry.value != null && entry.value.toString().isNotEmpty) ...[
+            if (entry.key != details.entries.first.key)
+              const SizedBox(height: 8),
+            _buildDetailRow(
+              context: context,
+              label: entry.key.tr(),
+              value: entry.key.toLowerCase().contains('card') &&
+                      entry.key.toLowerCase().contains('number')
+                  ? DepositWithdrawFormattingUtils.formatCardNumber(
+                      entry.value.toString())
+                  : entry.value.toString(),
+            ),
+          ],
       ],
     );
   }

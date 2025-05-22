@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/features/auth/screens/login_screen.dart';
+import 'package:golden_wallet/features/dashboard/screens/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/constants.dart';
 import 'package:golden_wallet/config/routes.dart';
@@ -13,6 +15,7 @@ import 'package:golden_wallet/features/notifications/providers/notification_prov
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/features/deposit_withdraw/providers/deposit_withdraw_provider.dart';
 import 'package:golden_wallet/features/catalog/providers/catalog_provider.dart';
+import 'package:golden_wallet/features/buy_sell/providers/gold_price_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +46,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => InvestmentProvider()),
           ChangeNotifierProvider(create: (_) => DepositWithdrawProvider()),
           ChangeNotifierProvider(create: (_) => CatalogProvider()),
+          ChangeNotifierProvider(create: (_) => GoldPriceProvider()),
         ],
         child: const MyApp(),
       ),
@@ -86,6 +90,10 @@ class _MyAppState extends State<MyApp> {
       onGenerateRoute: AppRoutes.generateRoute,
       initialRoute: AppRoutes.onboarding,
       home: const OnboardingScreen(),
+
+      //for development speed
+      // initialRoute: AppRoutes.dashboard,
+      // home: const DashboardScreen(),
     );
   }
 }

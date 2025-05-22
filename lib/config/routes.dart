@@ -3,11 +3,14 @@ import 'package:golden_wallet/config/constants.dart';
 import 'package:golden_wallet/features/auth/screens/phone_verification_screen.dart';
 import 'package:golden_wallet/features/auth/screens/register_screen.dart';
 import 'package:golden_wallet/features/auth/screens/reset_password_screen.dart';
+import 'package:golden_wallet/features/catalog/screens/cart_screen.dart';
+import 'package:golden_wallet/features/catalog/screens/checkout_screen.dart';
 import 'package:golden_wallet/features/onboarding/screens/onboarding_screen.dart';
 import 'package:golden_wallet/features/auth/screens/login_screen.dart';
 import 'package:golden_wallet/features/auth/screens/forgot_password_screen.dart';
 import 'package:golden_wallet/features/dashboard/screens/dashboard_screen.dart';
 import 'package:golden_wallet/features/buy_sell/screens/buy_sell_screen.dart';
+import 'package:golden_wallet/features/buy_sell/screens/gold_price_history_screen.dart';
 import 'package:golden_wallet/features/settings/screens/settings_screen.dart';
 import 'package:golden_wallet/features/transactions/screens/transaction_detail_screen.dart';
 import 'package:golden_wallet/features/transactions/screens/transactions_screen.dart';
@@ -39,8 +42,12 @@ class AppRoutes {
   static const String phoneVerification = AppConstants.routePhoneVerification;
   static const String dashboard = AppConstants.routeDashboard;
   static const String buySell = AppConstants.routeBuySell;
+  static const String goldPriceHistory = AppConstants.routeGoldPriceHistory;
   static const String depositWithdraw = AppConstants.routeDepositWithdraw;
   static const String catalog = AppConstants.routeCatalog;
+  static const String cart = AppConstants.routeCart;
+  static const String checkout = AppConstants.routeCheckout;
+
   static const String productDetail = AppConstants.routeProductDetail;
   static const String investment = AppConstants.routeInvestment;
   static const String investmentDetail = AppConstants.routeInvestmentDetail;
@@ -125,6 +132,13 @@ class AppRoutes {
           builder: (_) => const BuySellScreen(),
         );
 
+     
+
+      case goldPriceHistory:
+        return MaterialPageRoute(
+          builder: (_) => const GoldPriceHistoryScreen(),
+        );
+
       case depositWithdraw:
         return MaterialPageRoute(
           builder: (_) => const DepositWithdrawSelectionScreen(),
@@ -135,12 +149,23 @@ class AppRoutes {
           builder: (_) => const CatalogScreen(),
         );
 
+      case cart:
+        return MaterialPageRoute(
+          builder: (_) => const CartScreen(),
+        );
+
+      case checkout:
+        return MaterialPageRoute(
+          builder: (_) => const CheckoutScreen(),
+        );
+
       case productDetail:
         if (args is String) {
           return MaterialPageRoute(
             builder: (_) => ProductDetailScreen(productId: args),
           );
         }
+
         // Fallback if no product ID is provided
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
@@ -250,10 +275,10 @@ class AppRoutes {
           ),
         );
 
-      case investmentManagement:
-        return MaterialPageRoute(
-          builder: (_) => const InvestmentManagementScreen(),
-        );
+      // case investmentManagement:
+      //   return MaterialPageRoute(
+      //     builder: (_) => const InvestmentManagementScreen(),
+      //   );
 
       case admin:
         // Placeholder for admin route - will be replaced with actual implementation

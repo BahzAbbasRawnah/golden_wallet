@@ -1,4 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+/// Enum representing different gold units
+enum GoldUnit { gram, pound, bar }
 
 /// Enum representing different gold categories
 enum GoldCategory {
@@ -7,127 +13,261 @@ enum GoldCategory {
   bars,
 }
 
-/// Extension to provide additional functionality to GoldCategory enum
-extension GoldCategoryExtension on GoldCategory {
-  /// Get the translation key for the category
-  String get translationKey {
-    switch (this) {
-      case GoldCategory.grams:
-        return 'gold_grams';
-      case GoldCategory.pounds:
-        return 'gold_pounds';
-      case GoldCategory.bars:
-        return 'gold_bars';
-    }
-  }
-  
-  /// Get the icon for the category
-  IconData get icon {
-    switch (this) {
-      case GoldCategory.grams:
-        return Icons.scale;
-      case GoldCategory.pounds:
-        return Icons.monetization_on;
-      case GoldCategory.bars:
-        return Icons.view_module;
-    }
-  }
-}
-
-/// Model for gold gram types
-class GoldGramType {
+/// Model for gold type (karat)
+class GoldKarat {
+  final String id;
   final String karat;
-  final String translationKey;
-  final double purity;
-  
-  const GoldGramType({
+  final String name;
+  final String? description;
+
+  const GoldKarat({
+    required this.id,
     required this.karat,
-    required this.translationKey,
-    required this.purity,
+    required this.name,
+    this.description,
   });
-  
-  /// Get the price multiplier based on purity
-  double get priceMultiplier => purity;
+
+  factory GoldKarat.fromJson(Map<String, dynamic> json) {
+    return GoldKarat(
+      id: json['id'],
+      karat: json['karat'],
+      name: json['name'],
+      description: json['description'],
+    );
+  }
 }
 
-/// List of available gold gram types
-final List<GoldGramType> goldGramTypes = [
-  const GoldGramType(
-    karat: '18K',
-    translationKey: 'gold_18k',
-    purity: 0.750,
-  ),
-  const GoldGramType(
-    karat: '20K',
-    translationKey: 'gold_20k',
-    purity: 0.833,
-  ),
-  const GoldGramType(
-    karat: '21K',
-    translationKey: 'gold_21k',
-    purity: 0.875,
-  ),
-  const GoldGramType(
-    karat: '24K',
-    translationKey: 'gold_24k',
-    purity: 0.999,
-  ),
-];
+/// Model for gold category data
+class GoldCategoryData {
+  final String id;
+  final String name;
+  final IconData? icon;
+  final String? description;
 
-/// Model for gold pound weights
-class GoldPoundWeight {
+  const GoldCategoryData({
+    required this.id,
+    required this.name,
+    this.icon,
+    this.description,
+  });
+
+  factory GoldCategoryData.fromJson(Map<String, dynamic> json) {
+    IconData getIconData(String iconName) {
+      switch (iconName) {
+        case 'scale':
+          return Icons.scale;
+        case 'monetization_on':
+          return Icons.monetization_on;
+        case 'view_module':
+          return Icons.view_module;
+        case 'account_balance_wallet':
+          return Icons.account_balance_wallet;
+        case 'payments':
+          return Icons.payments;
+        case 'account_balance':
+          return Icons.account_balance;
+        case 'credit_card':
+          return Icons.credit_card;
+        default:
+          return Icons.circle;
+      }
+    }
+
+    return GoldCategoryData(
+      id: json['id'],
+      name: json['name'],
+      icon: json['icon'] != null ? getIconData(json['icon']) : null,
+      description: json['description'],
+    );
+  }
+}
+
+/// Model for gold bar
+class GoldBar {
+  final String id;
+  final String name;
   final double grams;
-  final String translationKey;
-  
-  const GoldPoundWeight({
-    required this.grams,
-    required this.translationKey,
-  });
-}
+  final String? description;
 
-/// List of available gold pound weights
-final List<GoldPoundWeight> goldPoundWeights = [
-  const GoldPoundWeight(
-    grams: 1.0,
-    translationKey: 'pound_1g',
-  ),
-  const GoldPoundWeight(
-    grams: 2.0,
-    translationKey: 'pound_2g',
-  ),
-  const GoldPoundWeight(
-    grams: 4.0,
-    translationKey: 'pound_4g',
-  ),
-  const GoldPoundWeight(
-    grams: 8.0,
-    translationKey: 'pound_8g',
-  ),
-];
+  const GoldBar({
+    required this.id,
+    required this.name,
+    required this.grams,
+    this.description,
+  });
+
+  factory GoldBar.fromJson(Map<String, dynamic> json) {
+    return GoldBar(
+      id: json['id'],
+      name: json['name'],
+      grams: json['grams'],
+      description: json['description'],
+    );
+  }
+}
 
 /// Model for payment method
 class PaymentMethod {
   final String id;
-  final String translationKey;
+  final String name;
   final IconData icon;
-  
+  final String description;
+
   const PaymentMethod({
     required this.id,
-    required this.translationKey,
+    required this.name,
     required this.icon,
+    required this.description,
   });
+
+  factory PaymentMethod.fromJson(Map<String, dynamic> json) {
+    IconData getIconData(String iconName) {
+      switch (iconName) {
+        case 'account_balance_wallet':
+          return Icons.account_balance_wallet;
+        case 'payments':
+          return Icons.payments;
+        case 'account_balance':
+          return Icons.account_balance;
+        case 'credit_card':
+          return Icons.credit_card;
+        case 'currency_bitcoin':
+          return Icons.currency_bitcoin;
+        default:
+          return Icons.payment;
+      }
+    }
+
+    return PaymentMethod(
+      id: json['id'],
+      name: json['name'],
+      icon: getIconData(json['icon']),
+      description: json['description'],
+    );
+  }
 }
 
-/// List of available payment methods
-final List<PaymentMethod> paymentMethods = [
-  const PaymentMethod(
-    id: 'wallet',
-    translationKey: 'wallet_payment',
-    icon: Icons.account_balance_wallet,
-  ),
-  const PaymentMethod(
-    id: 'cash',
-    translationKey: 'cash_transfer',
-    icon: Icons.payments,
-  ),
-];
+/// Model for gold price
+class GoldPrice {
+  final double buy;
+  final double sell;
+
+  const GoldPrice({
+    required this.buy,
+    required this.sell,
+  });
+
+  factory GoldPrice.fromJson(Map<String, dynamic> json) {
+    return GoldPrice(
+      buy: json['buy'].toDouble(),
+      sell: json['sell'].toDouble(),
+    );
+  }
+}
+
+/// Model for gold price history
+class GoldPriceHistory {
+  final DateTime date;
+  final Map<String, GoldPrice> prices;
+
+  const GoldPriceHistory({
+    required this.date,
+    required this.prices,
+  });
+
+  factory GoldPriceHistory.fromJson(Map<String, dynamic> json) {
+    Map<String, GoldPrice> priceMap = {};
+    json.forEach((key, value) {
+      if (key != 'date') {
+        priceMap[key] = GoldPrice.fromJson(value);
+      }
+    });
+
+    return GoldPriceHistory(
+      date: DateTime.parse(json['date']),
+      prices: priceMap,
+    );
+  }
+
+  String get formattedDate {
+    return DateFormat('MMM dd, yyyy', 'en_US').format(date.toLocal());
+  }
+}
+
+/// Service for loading gold data
+class GoldDataService {
+  static Future<Map<String, dynamic>> loadGoldData() async {
+    final String goldDataJson = await rootBundle
+        .loadString('lib/features/buy_sell/data/gold_data.json');
+    final goldData = json.decode(goldDataJson);
+
+    final List<GoldCategoryData> categories =
+        (goldData['goldCategories'] as List)
+            .map((item) => GoldCategoryData.fromJson(item))
+            .toList();
+
+    final List<GoldKarat> goldKarats = (goldData['goldKarats'] as List)
+        .map((item) => GoldKarat.fromJson(item))
+        .toList();
+
+    final List<GoldBar> goldBars = (goldData['goldBars'] as List)
+        .map((item) => GoldBar.fromJson(item))
+        .toList();
+
+    final List<PaymentMethod> paymentMethods =
+        (goldData['paymentMethods'] as List)
+            .map((item) => PaymentMethod.fromJson(item))
+            .toList();
+
+    return {
+      'categories': categories,
+      'goldKarats': goldKarats,
+      'goldBars': goldBars,
+      'paymentMethods': paymentMethods,
+    };
+  }
+
+  static Future<GoldPriceData> loadGoldPrices() async {
+    final String goldPricesJson = await rootBundle
+        .loadString('lib/features/buy_sell/data/gold_prices.json');
+    final goldPrices = json.decode(goldPricesJson);
+
+    return GoldPriceData.fromJson(goldPrices);
+  }
+}
+
+/// Model for gold price data
+class GoldPriceData {
+  final DateTime lastUpdated;
+  final String currency;
+  final Map<String, GoldPrice> basePricePerGram;
+  final List<GoldPriceHistory> priceHistory;
+
+  const GoldPriceData({
+    required this.lastUpdated,
+    required this.currency,
+    required this.basePricePerGram,
+    required this.priceHistory,
+  });
+
+  factory GoldPriceData.fromJson(Map<String, dynamic> json) {
+    Map<String, GoldPrice> prices = {};
+    (json['basePricePerGram'] as Map<String, dynamic>).forEach((key, value) {
+      prices[key] = GoldPrice.fromJson(value);
+    });
+
+    return GoldPriceData(
+      lastUpdated: DateTime.parse(json['lastUpdated']),
+      currency: json['currency'] ?? 'AED',
+      basePricePerGram: prices,
+      priceHistory: (json['priceHistory'] as List)
+          .map((item) => GoldPriceHistory.fromJson(item))
+          .toList(),
+    );
+  }
+
+  String get formattedLastUpdated {
+    return DateFormat('MMM dd, yyyy HH:mm', 'en_US')
+        .format(lastUpdated.toLocal());
+  }
+}

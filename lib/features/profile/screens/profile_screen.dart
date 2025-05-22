@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
@@ -153,23 +154,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'profile'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+  appBar: CustomAppBar(
+        title: 'profile'.tr(),
+        showBackButton: true,
         actions: [
           IconButton(
             icon: const Icon(
@@ -181,7 +168,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
         ],
+      
       ),
+
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _fetchUserData,

@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:lottie/lottie.dart';
-import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
-import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 
 /// Investment success screen
 class InvestmentSuccessScreen extends StatelessWidget {
   final Map<String, dynamic> investmentData;
-  
+
   const InvestmentSuccessScreen({
-    Key? key,
+    super.key,
     required this.investmentData,
-  }) : super(key: key);
-  
+  });
+
   @override
   Widget build(BuildContext context) {
-    final investmentProvider = Provider.of<InvestmentProvider>(context);
-    final plan = investmentProvider.getInvestmentPlanById(investmentData['planId'] as String);
     final amount = investmentData['amount'] as double;
     final totalValue = investmentData['totalValue'] as double;
-    
+    final currency = investmentData['currency'] as String? ?? '\$';
+    final planName = investmentData['planName'] as String? ?? '';
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -32,7 +29,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              
+
               // Success animation
               Lottie.asset(
                 'assets/animations/success.json',
@@ -41,7 +38,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
                 repeat: false,
               ),
               const SizedBox(height: 32),
-              
+
               // Success title
               Text(
                 'investmentSuccessful'.tr(),
@@ -52,12 +49,12 @@ class InvestmentSuccessScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              
+
               // Success message
               Text(
                 'investmentSuccessMessage'.tr(args: [
-                  '\$${amount.toStringAsFixed(2)}',
-                  plan?.name ?? '',
+                  '$currency${amount.toStringAsFixed(2)}',
+                  planName,
                 ]),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       height: 1.5,
@@ -65,7 +62,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              
+
               // Investment details
               Container(
                 padding: const EdgeInsets.all(16),
@@ -74,7 +71,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withAlpha(13), // 0.05 opacity
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -89,7 +86,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
                       value: '\$${amount.toStringAsFixed(2)}',
                     ),
                     const Divider(),
-                    
+
                     // Expected value at maturity
                     _buildDetailRow(
                       context: context,
@@ -101,9 +98,9 @@ class InvestmentSuccessScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const Spacer(),
-              
+
               // View investment button
               Container(
                 decoration: BoxDecoration(
@@ -133,7 +130,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Back to dashboard button
               CustomButton(
                 text: 'backToDashboard'.tr(),
@@ -154,7 +151,7 @@ class InvestmentSuccessScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   /// Build detail row
   Widget _buildDetailRow({
     required BuildContext context,

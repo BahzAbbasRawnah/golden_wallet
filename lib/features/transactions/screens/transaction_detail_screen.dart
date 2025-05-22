@@ -20,82 +20,90 @@ class TransactionDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TransactionProvider>(context);
-    final transaction = provider.getTransactionById(transactionId);
 
-    if (transaction == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'transactionDetails'.tr(),
-            style: TextStyle(
-              color: AppTheme.goldDark,
-              fontWeight: FontWeight.bold,
+    return FutureBuilder<Transaction?>(
+      future: provider.getTransactionById(transactionId),
+      builder: (context, snapshot) {
+        // Show loading indicator while waiting for the transaction
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: _buildAppBar(context),
+            body: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        // Show error message if transaction not found
+        if (snapshot.data == null) {
+          return Scaffold(
+            appBar: _buildAppBar(context),
+            body: Center(
+              child: Text(
+                'transactionNotFound'.tr(),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          );
+        }
+
+        // Show transaction details
+        final transaction = snapshot.data!;
+
+        return Scaffold(
+          appBar: _buildAppBar(context),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Transaction header
+                _buildTransactionHeader(context, transaction),
+                const SizedBox(height: 24),
+
+                // Transaction details
+                _buildTransactionDetails(context, transaction),
+                const SizedBox(height: 24),
+
+                // Payment details
+                if (transaction.paymentMethod != null)
+                  _buildPaymentDetails(context, transaction),
+                if (transaction.paymentMethod != null)
+                  const SizedBox(height: 24),
+
+                // Notes
+                if (transaction.description != null)
+                  _buildNotes(context, transaction),
+                if (transaction.description != null) const SizedBox(height: 24),
+
+                // Action buttons
+                _buildActionButtons(context, transaction),
+              ],
             ),
           ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: AppTheme.goldDark,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: Center(
-          child: Text(
-            'transactionNotFound'.tr(),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-      );
-    }
+        );
+      },
+    );
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'transactionDetails'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
+  /// Build app bar
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text(
+        'transactionDetails'.tr(),
+        style: TextStyle(
+          color: AppTheme.goldDark,
+          fontWeight: FontWeight.bold,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Transaction header
-            _buildTransactionHeader(context, transaction),
-            const SizedBox(height: 24),
-
-            // Transaction details
-            _buildTransactionDetails(context, transaction),
-            const SizedBox(height: 24),
-
-            // Payment details
-            if (transaction.paymentMethod != null)
-              _buildPaymentDetails(context, transaction),
-            if (transaction.paymentMethod != null) const SizedBox(height: 24),
-
-            // Notes
-            if (transaction.notes != null) _buildNotes(context, transaction),
-            if (transaction.notes != null) const SizedBox(height: 24),
-
-            // Action buttons
-            _buildActionButtons(context, transaction),
-          ],
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios,
+          color: AppTheme.goldDark,
         ),
+        onPressed: () => Navigator.pop(context),
       ),
     );
   }
@@ -116,7 +124,7 @@ class TransactionDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: transaction.type.color.withOpacity(0.1),
+                      color: transaction.type.color.withAlpha(25),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -165,7 +173,7 @@ class TransactionDetailScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: transaction.type.color.withOpacity(0.05),
+              color: transaction.type.color.withAlpha(13),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -176,7 +184,7 @@ class TransactionDetailScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 Text(
-                  '${transaction.type.isIncoming ? '+' : '-'} \$${transaction.total.toStringAsFixed(2)}',
+                  '${transaction.type.isIncoming ? '+' : '-'} ${transaction.currency} ${transaction.totalAmount.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: transaction.type.isIncoming
@@ -216,12 +224,19 @@ class TransactionDetailScreen extends StatelessWidget {
               transaction.goldType!,
             ),
             const SizedBox(height: 8),
-           _buildDetailRow(
-  context,
-  'weight'.tr(),
-  '${transaction.goldWeight!.toStringAsFixed(2)} ${'oz'.tr()}',
-),
-
+            _buildDetailRow(
+              context,
+              'weight'.tr(),
+              '${transaction.goldWeight!.toStringAsFixed(2)} ${'grams'.tr()}',
+            ),
+            if (transaction.goldCategory != null) ...[
+              const SizedBox(height: 8),
+              _buildDetailRow(
+                context,
+                'category'.tr(),
+                transaction.goldCategory!,
+              ),
+            ],
           ],
 
           // Price details
@@ -229,25 +244,19 @@ class TransactionDetailScreen extends StatelessWidget {
           _buildDetailRow(
             context,
             'price'.tr(),
-            '\$${transaction.price.toStringAsFixed(2)}',
+            '${transaction.currency} ${transaction.price.toStringAsFixed(2)}',
           ),
           const SizedBox(height: 8),
           _buildDetailRow(
             context,
             'amount'.tr(),
-            '\$${transaction.amount.toStringAsFixed(2)}',
-          ),
-          const SizedBox(height: 8),
-          _buildDetailRow(
-            context,
-            'fee'.tr(),
-            '\$${transaction.fee.toStringAsFixed(2)}',
+            '${transaction.currency} ${transaction.amount.toStringAsFixed(2)}',
           ),
           const Divider(height: 24),
           _buildDetailRow(
             context,
             'total'.tr(),
-            '\$${transaction.total.toStringAsFixed(2)}',
+            '${transaction.currency} ${transaction.totalAmount.toStringAsFixed(2)}',
             isBold: true,
           ),
         ],
@@ -285,14 +294,14 @@ class TransactionDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'notes'.tr(),
+            'description'.tr(),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
           ),
           const SizedBox(height: 16),
           Text(
-            transaction.notes!,
+            transaction.description!,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -398,10 +407,10 @@ class TransactionDetailScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.1),
+        color: status.color.withAlpha(25),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: status.color.withOpacity(0.5),
+          color: status.color.withAlpha(128),
           width: 1,
         ),
       ),

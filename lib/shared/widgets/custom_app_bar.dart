@@ -33,18 +33,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         title,
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: foregroundColor ?? (isDarkMode ? Colors.white : Colors.black),
+          color: AppTheme.goldDark,
         ),
+       
       ),
-      centerTitle: true,
+      centerTitle: false,
       elevation: elevation,
-      backgroundColor: backgroundColor ??
-          (isDarkMode ? AppTheme.surfaceDarkColor : Colors.white),
+      backgroundColor: Colors.transparent,
       foregroundColor:
           foregroundColor ?? (isDarkMode ? Colors.white : Colors.black),
       leading: showBackButton
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios),
+              icon: const Icon(
+                Icons.arrow_back_ios,
+                color: AppTheme.goldDark,
+                ),
               onPressed: onBackPressed ?? () => Navigator.pop(context),
             )
           : null,

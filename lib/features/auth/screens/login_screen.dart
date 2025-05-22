@@ -3,8 +3,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:golden_wallet/config/constants.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 import 'package:golden_wallet/shared/widgets/custom_text_field.dart';
+import 'package:golden_wallet/shared/widgets/custom_messages.dart';
 import 'package:local_auth/local_auth.dart';
 
 /// Login screen
@@ -22,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   final LocalAuthentication _localAuth = LocalAuthentication();
   bool _canCheckBiometrics = false;
+  bool _rememberMe = false;
 
   @override
   void initState() {
@@ -65,15 +68,48 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
 
-      if (authenticated) {
-        _navigateToDashboard();
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (authenticated) {
+          // Show success message
+          context.showSuccessMessage(
+            SnackBarTranslationKeys.operationSuccess.tr(),
+            duration: const Duration(seconds: 1),
+          );
+
+          // Navigate after a short delay to allow the user to see the success message
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+            }
+          });
+        } else {
+          // Show error message for failed authentication
+          context.showErrorMessage(
+            'authenticationFailed'.tr(),
+            action: CustomSnackBarMessages.createRetryAction(() {
+              _authenticateWithBiometrics();
+            }),
+          );
+        }
       }
     } catch (e) {
       // Handle authentication error
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        context.showErrorMessage(
+          'errorOccurred'.tr(),
+          action: CustomSnackBarMessages.createRetryAction(() {
+            _authenticateWithBiometrics();
+          }),
+        );
+      }
     }
   }
 
@@ -87,37 +123,25 @@ class _LoginScreenState extends State<LoginScreen> {
       // Simulate login delay
       await Future.delayed(const Duration(seconds: 2));
 
-      // Navigate directly to dashboard
-      _navigateToDashboard();
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
 
-      setState(() {
-        _isLoading = false;
-      });
+        // Show success message
+        context.showSuccessMessage(
+          SnackBarTranslationKeys.operationSuccess.tr(),
+          duration: const Duration(seconds: 1),
+        );
+
+        // Navigate after a short delay to allow the user to see the success message
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+          }
+        });
+      }
     }
-  }
-
-  // This method was previously used but is now kept for reference
-  // void _navigateToPhoneVerification() {
-  //   Navigator.pushNamed(
-  //     context,
-  //     AppRoutes.phoneVerification,
-  //     arguments: _emailController.text,
-  //   );
-  // }
-
-  // Navigate to dashboard
-  void _navigateToDashboard() {
-    Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
-  }
-
-  // Navigate to registration screen
-  void _navigateToRegister() {
-    Navigator.pushNamed(context, AppRoutes.register);
-  }
-
-  // Navigate to forgot password screen
-  void _navigateToForgotPassword() {
-    Navigator.pushNamed(context, AppRoutes.forgotPassword);
   }
 
   @override
@@ -139,28 +163,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   // App logo
                   Center(
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
                         gradient: AppTheme.goldGradient,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryColor.withAlpha(100),
-                            blurRadius: 15,
-                            spreadRadius: 2,
+                            color: AppTheme.primaryColor.withAlpha(70),
+                            blurRadius: 10,
+                            spreadRadius: 1,
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.account_balance_wallet,
-                          size: 60,
-                          color: Colors.white,
-                        ),
+                      child: const Icon(
+                        Icons.account_balance_wallet,
+                        size: 50,
+                        color: Colors.white,
                       ),
                     ),
                   ),
+
                   SizedBox(height: size.height * 0.05),
 
                   // Welcome text
@@ -168,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'login'.tr(),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.goldDark,
+                          color: AppTheme.primaryColor,
                         ),
                   ),
                   const SizedBox(height: 8),
@@ -176,8 +199,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     'appDescription'.tr(),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[300]
-                              : Colors.grey[600],
+                              ? AppTheme.secondaryLightGrey
+                              : AppTheme.secondaryGrey,
                           height: 1.3,
                         ),
                   ),
@@ -223,20 +246,41 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Forgot password link
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _navigateToForgotPassword,
-                      child: Text(
-                        'forgotPassword'.tr(),
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w500,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _rememberMe,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                          ),
+                          Text(
+                            'rememberMe'.tr(),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.forgotPassword,
+                        ),
+                        child: Text(
+                          'forgotPassword'.tr(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
+                  const SizedBox(height: 24),
+
                   const SizedBox(height: 24),
 
                   // Login button with gold gradient
@@ -257,8 +301,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _login,
                       isLoading: _isLoading,
                       type: ButtonType.primary,
-                      backgroundColor: Colors.transparent,
-                      textColor: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -287,7 +329,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         TextButton(
-                          onPressed: _navigateToRegister,
+                          onPressed: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.register,
+                          ),
                           child: Text(
                             'signUp'.tr(),
                             style: TextStyle(

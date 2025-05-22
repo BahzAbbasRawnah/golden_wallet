@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
-import 'package:golden_wallet/features/investment/models/investment_plan_model.dart';
-import 'package:golden_wallet/features/investment/models/user_investment_model.dart';
+import 'package:golden_wallet/features/investment/models/investment_plan.dart';
 import 'package:golden_wallet/features/investment/providers/investment_provider.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
 import 'package:golden_wallet/shared/widgets/custom_card.dart';
@@ -52,8 +52,7 @@ class _InvestmentConfirmationScreenState
       amount: widget.investmentData['amount'] as double,
       durationMonths: widget.investmentData['duration'] as int,
       isRecurring: widget.investmentData['isRecurring'] as bool,
-      recurringDetails: widget.investmentData['recurringDetails']
-          as RecurringInvestmentDetails?,
+      recurringDetails: widget.investmentData['recurringDetails'],
     );
 
     setState(() {
@@ -83,106 +82,99 @@ class _InvestmentConfirmationScreenState
   @override
   Widget build(BuildContext context) {
     final investmentProvider = Provider.of<InvestmentProvider>(context);
-    final plan = investmentProvider
+    final planFuture = investmentProvider
         .getInvestmentPlanById(widget.investmentData['planId'] as String);
-    final isRtl = Directionality.of(context) == TextDirection.RTL;
 
-    if (plan == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-              color: AppTheme.goldDark,
+    // Since getInvestmentPlanById is async, we need to handle it differently
+    return FutureBuilder<InvestmentPlan?>(
+      future: planFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldDark),
             ),
-            onPressed: () => Navigator.pop(context),
+          );
+        }
+
+        final plan = snapshot.data;
+        if (plan == null) {
+          return Scaffold(
+            appBar: CustomAppBar(
+              title: 'investmentPlanNotFound'.tr(),
+              showBackButton: true,
+            ),
+            body: Center(
+              child: Text('investmentPlanNotFound'.tr()),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: CustomAppBar(
+            title: 'confirmInvestment'.tr(),
+            showBackButton: true,
           ),
-        ),
-        body: Center(
-          child: Text('investmentPlanNotFound'.tr()),
-        ),
-      );
-    }
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Plan summary
+                _buildPlanSummary(context, plan),
+                const SizedBox(height: 24),
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'confirmInvestment'.tr(),
-          style: TextStyle(
-            color: AppTheme.goldDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Plan summary
-            _buildPlanSummary(context, plan),
-            const SizedBox(height: 24),
+                // Investment details
+                _buildInvestmentDetails(context),
+                const SizedBox(height: 24),
 
-            // Investment details
-            _buildInvestmentDetails(context),
-            const SizedBox(height: 24),
+                // Terms and conditions
+                _buildTermsAndConditions(context),
+                const SizedBox(height: 32),
 
-            // Terms and conditions
-            _buildTermsAndConditions(context),
-            const SizedBox(height: 32),
-
-            // Confirm button
-            Container(
-              decoration: BoxDecoration(
-                gradient: AppTheme.goldGradient,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withAlpha(70),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                // Confirm button
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.goldGradient,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withAlpha(70),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: CustomButton(
-                text: 'confirmInvestment'.tr(),
-                onPressed: _isLoading ? () {} : _createInvestment,
-                isLoading: _isLoading,
-                type: ButtonType.primary,
-                backgroundColor: Colors.transparent,
-                textColor: Colors.white,
-                isFullWidth: true,
-              ),
-            ),
-            const SizedBox(height: 16),
+                  child: CustomButton(
+                    text: 'confirmInvestment'.tr(),
+                    onPressed: _isLoading ? () {} : _createInvestment,
+                    isLoading: _isLoading,
+                    type: ButtonType.primary,
+                    backgroundColor: Colors.transparent,
+                    textColor: Colors.white,
+                    isFullWidth: true,
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-            // Cancel button
-            CustomButton(
-              text: 'cancel'.tr(),
-              onPressed: _isLoading ? () {} : () => Navigator.pop(context),
-              type: ButtonType.secondary,
-              textColor: AppTheme.goldDark,
-              isFullWidth: true,
+                // Cancel button
+                CustomButton(
+                  text: 'cancel'.tr(),
+                  onPressed: _isLoading ? () {} : () => Navigator.pop(context),
+                  type: ButtonType.secondary,
+                  textColor: AppTheme.goldDark,
+                  isFullWidth: true,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   /// Build plan summary
-  Widget _buildPlanSummary(BuildContext context, InvestmentPlanModel plan) {
+  Widget _buildPlanSummary(BuildContext context, InvestmentPlan plan) {
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,11 +185,11 @@ class _InvestmentConfirmationScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withOpacity(0.1),
+                  color: AppTheme.goldColor.withAlpha(25),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  plan.type.icon,
+                  Icons.account_balance,
                   color: AppTheme.goldDark,
                   size: 20,
                 ),
@@ -215,7 +207,7 @@ class _InvestmentConfirmationScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    plan.type.translationKey.tr(),
+                    plan.paymentFrequency.translationKey.tr(),
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.grey[300]
@@ -248,7 +240,7 @@ class _InvestmentConfirmationScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${plan.expectedReturnsPercentage}% ${'perAnnum'.tr()}',
+                      '${plan.expectedReturns.min}-${plan.expectedReturns.max}% ${'perAnnum'.tr()}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.goldDark,
@@ -308,8 +300,7 @@ class _InvestmentConfirmationScreenState
     final amount = widget.investmentData['amount'] as double;
     final duration = widget.investmentData['duration'] as int;
     final isRecurring = widget.investmentData['isRecurring'] as bool;
-    final recurringDetails = widget.investmentData['recurringDetails']
-        as RecurringInvestmentDetails?;
+    final recurringDetails = widget.investmentData['recurringDetails'];
     final managementFee = widget.investmentData['managementFee'] as double;
     final expectedReturns = widget.investmentData['expectedReturns'] as double;
     final totalValue = widget.investmentData['totalValue'] as double;
@@ -352,7 +343,7 @@ class _InvestmentConfirmationScreenState
                   context: context,
                   title: 'recurringInvestment'.tr(),
                   value:
-                      '\$${recurringDetails.amount.toStringAsFixed(2)} ${recurringDetails.frequency.tr()}',
+                      '\$${recurringDetails['amount'].toStringAsFixed(2)} ${recurringDetails['frequency'].tr()}',
                 ),
               ],
 
@@ -456,28 +447,26 @@ class _InvestmentConfirmationScreenState
                       'investmentTerm2',
                       'investmentTerm3',
                       'investmentTerm4'
-                    ]
-                        .map((term) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('• '),
-                                  Expanded(
-                                    child: Text(
-                                      term.tr(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            height: 1.5,
-                                          ),
-                                    ),
-                                  ),
-                                ],
+                    ].map((term) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('• '),
+                              Expanded(
+                                child: Text(
+                                  term.tr(),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        height: 1.5,
+                                      ),
+                                ),
                               ),
-                            ))
-                        .toList(),
+                            ],
+                          ),
+                        )),
 
                     const SizedBox(height: 16),
 

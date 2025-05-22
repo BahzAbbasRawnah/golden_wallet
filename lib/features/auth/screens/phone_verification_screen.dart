@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:golden_wallet/config/routes.dart';
 import 'package:golden_wallet/config/theme.dart';
+import 'package:golden_wallet/shared/widgets/custom_app_bar.dart';
 import 'package:golden_wallet/shared/widgets/custom_button.dart';
+import 'package:golden_wallet/shared/widgets/custom_messages.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'dart:ui' as ui;
 
 /// Phone verification screen
 class PhoneVerificationScreen extends StatefulWidget {
@@ -70,13 +73,11 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   // Verify OTP
   Future<void> _verifyOtp() async {
     if (_otpController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'invalidCode'.tr(),
-          ),
-          backgroundColor: AppTheme.errorColor,
-        ),
+      context.showErrorMessage(
+        'invalidCode'.tr(),
+        action: CustomSnackBarMessages.createDismissAction(() {
+          // Dismiss action
+        }),
       );
       return;
     }
@@ -112,13 +113,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
     // Check if widget is still mounted before showing snackbar
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'codeResent'.tr(),
-          ),
-          backgroundColor: AppTheme.successColor,
-        ),
+      context.showSuccessMessage(
+        'codeResent'.tr(),
+        duration: const Duration(seconds: 2),
       );
 
       setState(() {
@@ -140,19 +137,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isRtl = context.locale.languageCode == 'ar';
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            isRtl ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-            color: AppTheme.goldDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: CustomAppBar(
+        title: 'phoneVerification'.tr(),
+        showBackButton: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -184,6 +172,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 32),
 
                 // Title
@@ -191,7 +180,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                   'verificationCode'.tr(),
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.goldDark,
+                        color: AppTheme.primaryColor,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -199,8 +188,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                   'enterVerificationCode'.tr(),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[300]
-                            : Colors.grey[600],
+                            ? AppTheme.secondaryLightGrey
+                            : AppTheme.secondaryGrey,
                         height: 1.3,
                       ),
                 ),
@@ -215,66 +204,55 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
                 // OTP input
                 PinCodeTextField(
-                    appContext: context,
-                    length: 6,
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    animationType: AnimationType.fade,
-                    pinTheme: PinTheme(
-                      shape: PinCodeFieldShape.box,
-                      borderRadius: BorderRadius.circular(8),
-                      fieldHeight: 50,
-                      fieldWidth: 45,
-                      activeFillColor:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF2A2A2A)
-                              : Colors.white,
-                      inactiveFillColor:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF1E1E1E)
-                              : Colors.grey[100],
-                      selectedFillColor:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF3A3A3A)
-                              : Colors.white,
-                      activeColor: AppTheme.goldColor,
-                      inactiveColor: Colors.grey[400],
-                      selectedColor: AppTheme.primaryColor,
-                    ),
-                    animationDuration: const Duration(milliseconds: 300),
-                    enableActiveFill: true,
-                    onCompleted: (v) {
-                      // Auto verify when complete
-                      _verifyOtp();
-                    },
-                    beforeTextPaste: (text) {
-                      // Allow only numbers
-                      return text?.replaceAll(RegExp(r'[^0-9]'), '') != null;
-                    },
+                  appContext: context,
+                  length: 6,
+                  controller: _otpController,
+                  keyboardType: TextInputType.number,
+                  animationType: AnimationType.fade,
+                  enablePinAutofill: true,
+                  autoFocus: true,
+                  pinTheme: PinTheme(
+                    shape: PinCodeFieldShape.box,
+                    borderRadius: BorderRadius.circular(8),
+                    fieldHeight: 50,
+                    fieldWidth: 45,
+                    activeFillColor:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF2A2A2A)
+                            : Colors.white,
+                    inactiveFillColor:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF1E1E1E)
+                            : Colors.grey[100],
+                    selectedFillColor:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF3A3A3A)
+                            : Colors.white,
+                    activeColor: AppTheme.goldColor,
+                    inactiveColor: AppTheme.secondaryLightGrey,
+                    selectedColor: AppTheme.primaryColor,
                   ),
-                
+                  animationDuration: const Duration(milliseconds: 300),
+                  enableActiveFill: true,
+                  onCompleted: (v) {
+                    // Auto verify when complete
+                    _verifyOtp();
+                  },
+                  beforeTextPaste: (text) {
+                    // Allow only numbers
+                    return text?.replaceAll(RegExp(r'[^0-9]'), '') != null;
+                  },
+                ),
+
                 const SizedBox(height: 32),
 
                 // Verify button
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.goldGradient,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryColor.withAlpha(70),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
+                Center(
                   child: CustomButton(
                     text: 'verify'.tr(),
                     onPressed: _verifyOtp,
                     isLoading: _isLoading,
                     type: ButtonType.primary,
-                    backgroundColor: Colors.transparent,
-                    textColor: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -305,16 +283,28 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                                   ),
                                 ),
                               )
-                            : Text(
-                                _resendTimer > 0
-                                    ? '${'resendCode'.tr()} (${_resendTimer}s)'
-                                    : 'resendCode'.tr(),
-                                style: TextStyle(
-                                  color: _resendTimer > 0
-                                      ? Colors.grey[500]
-                                      : AppTheme.goldDark,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _resendTimer > 0
+                                        ? '${'resendCode'.tr()} (${_resendTimer}s)'
+                                        : 'resendCode'.tr(),
+                                    style: TextStyle(
+                                      color: _resendTimer > 0
+                                          ? Colors.grey[500]
+                                          : AppTheme.goldDark,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.refresh,
+                                    color: _resendTimer > 0
+                                        ? Colors.grey[500]
+                                        : AppTheme.goldDark,
+                                    size: 20,
+                                  )
+                                ],
                               ),
                       ),
                     ],
